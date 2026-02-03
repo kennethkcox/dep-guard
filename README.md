@@ -44,13 +44,31 @@ DepGuard:            "lodash has 5 vulnerabilities, but only 1 is reachable (95%
 
 ## Installation
 
+### From GitHub (recommended)
+
 ```bash
-npm install -g depguard
+# Clone the repository
+git clone https://github.com/kennethkcox/dep-guard.git
+cd dep-guard
+
+# Install dependencies
+npm install
+
+# Link globally (makes 'depguard' command available)
+npm link
 ```
 
-Or run directly with npx:
+### Run without installing globally
+
 ```bash
-npx depguard scan
+# After cloning and npm install:
+node bin/depguard.js scan
+```
+
+### Quick one-liner
+
+```bash
+git clone https://github.com/kennethkcox/dep-guard.git && cd dep-guard && npm install && npm link
 ```
 
 ## Quick Start
