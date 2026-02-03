@@ -217,6 +217,15 @@ class GenericManifestFinder {
                 type: 'lockfile',
                 confidence: 0.95,
                 validator: null
+            },
+
+            // .NET ecosystem (legacy packages.config)
+            {
+                filename: 'packages.config',
+                ecosystem: 'nuget',
+                type: 'manifest',
+                confidence: 0.95,
+                validator: this.validatePackagesConfig.bind(this)
             }
         ];
     }
@@ -551,6 +560,21 @@ class GenericManifestFinder {
             return { valid: true };
         } catch (error) {
             return { valid: false, message: `Invalid JSON: ${error.message}` };
+        }
+    }
+
+    validatePackagesConfig(filePath) {
+        try {
+            const content = fs.readFileSync(filePath, 'utf8');
+
+            // Must contain <package elements
+            if (!content.includes('<package ') && !content.includes('<packages')) {
+                return { valid: false, message: 'Not a valid packages.config' };
+            }
+
+            return { valid: true };
+        } catch (error) {
+            return { valid: false, message: `Cannot read file: ${error.message}` };
         }
     }
 

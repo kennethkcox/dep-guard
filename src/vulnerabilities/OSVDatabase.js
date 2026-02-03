@@ -422,13 +422,22 @@ class OSVDatabase {
   getEcosystem(ecosystem) {
     const map = {
       'javascript': 'npm',
+      'npm': 'npm',
       'python': 'PyPI',
+      'pypi': 'PyPI',
       'java': 'Maven',
+      'maven': 'Maven',
       'go': 'Go',
       'rust': 'crates.io',
-      'ruby': 'RubyGems'
+      'cargo': 'crates.io',
+      'ruby': 'RubyGems',
+      'rubygems': 'RubyGems',
+      'nuget': 'NuGet',
+      'dotnet': 'NuGet',
+      'packagist': 'Packagist',
+      'php': 'Packagist'
     };
-    return map[ecosystem] || 'npm';
+    return map[ecosystem] || ecosystem;
   }
 }
 

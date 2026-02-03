@@ -293,6 +293,9 @@ class DepGuardScanner2 {
             case 'packagist':
                 return this.extractPhpDependencies(content, manifest);
 
+            case 'nuget':
+                return this.extractNuGetDependencies(content, manifest);
+
             default:
                 console.warn(`  ⚠️  Unsupported ecosystem: ${manifest.ecosystem}`);
                 return [];
@@ -534,6 +537,72 @@ class DepGuardScanner2 {
                 `Failed to parse composer.json: ${error.message}`,
                 manifest.path,
                 { ecosystem: 'packagist' }
+            );
+        }
+    }
+
+    /**
+     * Extract NuGet (.NET) dependencies from .csproj files
+     */
+    extractNuGetDependencies(content, manifest) {
+        const deps = [];
+
+        try {
+            // Parse PackageReference elements (modern .NET Core/5+/6+ format)
+            // <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+            const packageRefRegex = /<PackageReference\s+Include=["']([^"']+)["']\s+Version=["']([^"']+)["']\s*\/>/gi;
+            let match;
+            while ((match = packageRefRegex.exec(content)) !== null) {
+                deps.push({
+                    name: match[1],
+                    version: match[2].replace(/[\[\]\(\)]/g, '').split(',')[0].trim(),
+                    ecosystem: 'nuget',
+                    manifest: manifest.path
+                });
+            }
+
+            // Also handle PackageReference with Version as child element
+            // <PackageReference Include="Package.Name">
+            //   <Version>1.0.0</Version>
+            // </PackageReference>
+            const packageRefBlockRegex = /<PackageReference\s+Include=["']([^"']+)["'][^>]*>[\s\S]*?<Version>([^<]+)<\/Version>[\s\S]*?<\/PackageReference>/gi;
+            while ((match = packageRefBlockRegex.exec(content)) !== null) {
+                // Avoid duplicates
+                if (!deps.find(d => d.name === match[1])) {
+                    deps.push({
+                        name: match[1],
+                        version: match[2].trim(),
+                        ecosystem: 'nuget',
+                        manifest: manifest.path
+                    });
+                }
+            }
+
+            // Parse legacy packages.config format
+            // <package id="Newtonsoft.Json" version="13.0.1" targetFramework="net48" />
+            if (manifest.filename === 'packages.config') {
+                const packageRegex = /<package\s+id=["']([^"']+)["']\s+version=["']([^"']+)["'][^>]*\/>/gi;
+                while ((match = packageRegex.exec(content)) !== null) {
+                    deps.push({
+                        name: match[1],
+                        version: match[2],
+                        ecosystem: 'nuget',
+                        manifest: manifest.path
+                    });
+                }
+            }
+
+            // Validate dependency count
+            if (deps.length > 0) {
+                Validator.validateDependencyCount(deps.length);
+            }
+
+            return deps;
+        } catch (error) {
+            throw new ManifestParsingError(
+                `Failed to parse .NET manifest: ${error.message}`,
+                manifest.path,
+                { ecosystem: 'nuget' }
             );
         }
     }
