@@ -1,0 +1,35 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- CVE-2022-29117, CVE-2022-29145 - Denial of Service -->
+    <PackageReference Include="System.Text.Encodings.Web" Version="4.7.1" />
+
+    <!-- CVE-2021-26701 - Remote Code Execution -->
+    <PackageReference Include="System.Text.Encodings.Web" Version="4.5.0" />
+
+    <!-- CVE-2022-34716 - Information Disclosure -->
+    <PackageReference Include="System.Security.Cryptography.Xml" Version="4.7.0" />
+
+    <!-- CVE-2021-34485 - Information Disclosure -->
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="3.1.0" />
+
+    <!-- CVE-2022-41032 - Privilege Escalation -->
+    <PackageReference Include="NuGet.Commands" Version="5.9.0" />
+
+    <!-- Newtonsoft.Json - older versions have known vulnerabilities -->
+    <PackageReference Include="Newtonsoft.Json" Version="11.0.2" />
+
+    <!-- log4net - CVE-2018-1285 -->
+    <PackageReference Include="log4net" Version="2.0.8" />
+
+    <!-- ImageSharp - CVE-2022-24741 -->
+    <PackageReference Include="SixLabors.ImageSharp" Version="1.0.3" />
+  </ItemGroup>
+
+</Project>
