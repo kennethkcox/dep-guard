@@ -9,6 +9,15 @@ class OSVDatabase {
   constructor(options = {}) {
     this.baseUrl = 'https://api.osv.dev';
     this.timeout = options.timeout || 10000;
+    this.batchSize = options.batchSize || 100; // Max packages per batch request
+    this.delayBetweenBatches = options.delayBetweenBatches || 500; // ms delay between batches
+  }
+
+  /**
+   * Sleep for rate limiting
+   */
+  sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
   }
 
   /**
@@ -55,24 +64,55 @@ class OSVDatabase {
   }
 
   /**
-   * Batch query multiple packages
+   * Batch query multiple packages (with chunking for large lists)
    */
   async queryBatch(packages, ecosystem) {
-    const queries = packages.map(pkg => ({
-      package: {
-        name: pkg.name,
-        ecosystem: this.getEcosystem(ecosystem)
-      },
-      version: pkg.version
-    }));
-
-    try {
-      const result = await this.makeRequest('/v1/querybatch', 'POST', { queries });
-      return this.processBatchResults(result, packages);
-    } catch (error) {
-      console.error(`Batch query failed: ${error.message}`);
+    if (packages.length === 0) {
       return [];
     }
+
+    const allVulns = [];
+    const chunks = this.chunkArray(packages, this.batchSize);
+
+    console.log(`  Querying OSV for ${packages.length} packages in ${chunks.length} batch(es)...`);
+
+    for (let i = 0; i < chunks.length; i++) {
+      const chunk = chunks[i];
+      const queries = chunk.map(pkg => ({
+        package: {
+          name: pkg.name,
+          ecosystem: this.getEcosystem(ecosystem)
+        },
+        version: pkg.version
+      }));
+
+      try {
+        const result = await this.makeRequest('/v1/querybatch', 'POST', { queries });
+        const vulns = this.processBatchResults(result, chunk);
+        allVulns.push(...vulns);
+
+        // Rate limiting: delay between batches (except after last one)
+        if (i < chunks.length - 1) {
+          await this.sleep(this.delayBetweenBatches);
+        }
+      } catch (error) {
+        console.error(`  Batch ${i + 1}/${chunks.length} failed: ${error.message}`);
+        // Continue with other batches
+      }
+    }
+
+    return allVulns;
+  }
+
+  /**
+   * Split array into chunks
+   */
+  chunkArray(array, size) {
+    const chunks = [];
+    for (let i = 0; i < array.length; i += size) {
+      chunks.push(array.slice(i, i + size));
+    }
+    return chunks;
   }
 
   /**
