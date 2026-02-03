@@ -9,8 +9,8 @@ class OSVDatabase {
   constructor(options = {}) {
     this.baseUrl = 'https://api.osv.dev';
     this.timeout = options.timeout || 10000;
-    this.batchSize = options.batchSize || 100; // Max packages per batch request
-    this.delayBetweenBatches = options.delayBetweenBatches || 500; // ms delay between batches
+    this.batchSize = options.batchSize || 20; // Max packages per batch request (OSV limit)
+    this.delayBetweenBatches = options.delayBetweenBatches || 1000; // 1s delay between batches
   }
 
   /**
@@ -87,17 +87,17 @@ class OSVDatabase {
       }));
 
       try {
-        const result = await this.makeRequest('/v1/querybatch', 'POST', { queries });
+        const result = await this.makeRequestWithRetry('/v1/querybatch', 'POST', { queries });
         const vulns = this.processBatchResults(result, chunk);
         allVulns.push(...vulns);
-
-        // Rate limiting: delay between batches (except after last one)
-        if (i < chunks.length - 1) {
-          await this.sleep(this.delayBetweenBatches);
-        }
       } catch (error) {
         console.error(`  Batch ${i + 1}/${chunks.length} failed: ${error.message}`);
         // Continue with other batches
+      }
+
+      // Rate limiting: delay between batches (except after last one)
+      if (i < chunks.length - 1) {
+        await this.sleep(this.delayBetweenBatches);
       }
     }
 
@@ -113,6 +113,33 @@ class OSVDatabase {
       chunks.push(array.slice(i, i + size));
     }
     return chunks;
+  }
+
+  /**
+   * Make request with retry and exponential backoff
+   */
+  async makeRequestWithRetry(path, method, data, maxRetries = 3) {
+    let lastError;
+
+    for (let attempt = 0; attempt < maxRetries; attempt++) {
+      try {
+        return await this.makeRequest(path, method, data);
+      } catch (error) {
+        lastError = error;
+
+        // If rate limited (HTTP 400/429), wait longer before retry
+        if (error.message.includes('400') || error.message.includes('429')) {
+          const delay = Math.pow(2, attempt) * 2000; // 2s, 4s, 8s
+          console.log(`  Rate limited, waiting ${delay/1000}s before retry...`);
+          await this.sleep(delay);
+        } else {
+          // For other errors, shorter delay
+          await this.sleep(1000);
+        }
+      }
+    }
+
+    throw lastError;
   }
 
   /**
