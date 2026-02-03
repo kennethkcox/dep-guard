@@ -39,3 +39,4 @@ logs/
 
 # Claude Code local settings
 .claude/
+reports/
