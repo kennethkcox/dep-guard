@@ -78,16 +78,16 @@ git clone https://github.com/kennethkcox/dep-guard.git && cd dep-guard && npm in
 depguard scan
 
 # Scan a specific project
-depguard scan /path/to/project
+depguard scan -p /path/to/project
 
 # Deep analysis (slower, more thorough)
-depguard scan --deep
+depguard scan --deep-analysis
 
 # Output as JSON
-depguard scan --format json --output results.json
+depguard scan -o json -f results.json
 
 # Generate HTML report
-depguard scan --format html --output report.html
+depguard scan -o html -f report.html
 ```
 
 ## Example Output
@@ -143,17 +143,18 @@ UNREACHABLE (not exploitable):
 ## CLI Options
 
 ```
-Usage: depguard scan [options] [path]
+Usage: depguard scan [options]
 
 Options:
-  -f, --format <type>         Output format: table, json, html, sarif, markdown (default: table)
-  -o, --output <file>         Save report to file
-  --min-confidence <number>   Minimum confidence threshold 0-1 (default: 0.5)
-  --entry-confidence <number> Entry point detection confidence (default: 0.6)
-  --max-depth <number>        Maximum call graph depth (default: 10)
-  --deep                      Enable deep analysis mode
-  --verbose                   Verbose output
-  --no-color                  Disable colored output
+  -p, --path <path>              Project path (default: current directory)
+  -d, --depth <depth>            Analysis depth (default: 10)
+  -c, --confidence <confidence>  Minimum confidence threshold 0-1 (default: 0.5)
+  -o, --output <format>          Output format: table, json, html, sarif, markdown (default: table)
+  -f, --file <filepath>          Save report to file
+  --deep-analysis                Enable deep reachability analysis
+  --reachable-only               Show only reachable vulnerabilities
+  --severity <level>             Filter by severity (critical, high, medium, low)
+  -v, --verbose                  Verbose output
 ```
 
 ## Configuration
