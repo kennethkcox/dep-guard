@@ -1,4 +1,4 @@
-# DepGuard
+# DepGuard v2.0 - Production Ready
 
 Advanced dependency vulnerability scanner with sophisticated reachability analysis capabilities.
 
