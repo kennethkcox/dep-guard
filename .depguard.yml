@@ -1,0 +1,66 @@
+# DepGuard Configuration File
+# Place this in your project root to customize scanning behavior
+
+scan:
+  # Maximum call graph depth
+  depth: 10
+
+  # Include dev dependencies in analysis
+  includeDevDependencies: false
+
+  # Paths to exclude from analysis (glob patterns)
+  excludePaths:
+    - test/**
+    - tests/**
+    - __tests__/**
+    - build/**
+    - dist/**
+    - coverage/**
+    - node_modules/**
+    - .git/**
+
+reachability:
+  # Maximum depth for reachability path finding
+  analysisDepth: 10
+
+  # Minimum confidence threshold (0.0 - 1.0)
+  # Higher values = fewer false positives, more false negatives
+  minConfidence: 0.5
+
+  # Track dynamic calls (eval, Function, etc.)
+  # Reduces false negatives but may increase false positives
+  trackDynamicCalls: true
+
+  # Include indirect reachability paths (backward analysis)
+  # More thorough but slower
+  includeIndirectPaths: true
+
+reporting:
+  # Report format: table, json, html, sarif, markdown
+  format: table
+
+  # Verbosity level: normal, detailed
+  verbosity: normal
+
+  # Only show reachable vulnerabilities
+  onlyReachable: false
+
+  # Minimum severity to report: low, medium, high, critical
+  minSeverity: low
+
+vulnerability:
+  # Directory for cached vulnerability data
+  cacheDir: .depguard-cache
+
+  # Cache expiry in hours
+  cacheExpiry: 24
+
+  # Vulnerability data sources (enable/disable)
+  sources:
+    osv: true
+    github: true
+    nvd: true
+    snyk: false  # Requires API key
+
+  # Snyk API token (if using Snyk)
+  # snykToken: your-token-here

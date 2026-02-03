@@ -1,0 +1,163 @@
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                   HOW TO SCAN C:\Users\cczin\dependency-bad                   ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+YOUR MISSION: Scan the multi-service project at C:\Users\cczin\dependency-bad
+
+═══════════════════════════════════════════════════════════════════════════════
+
+OPTION 1: AUTOMATED SCAN (EASIEST) ⭐ RECOMMENDED
+──────────────────────────────────────────────
+
+Double-click this file to scan all services automatically:
+  📁 C:\Users\cczin\appservice-scan\scan-dependency-bad.bat
+
+What it does:
+  ✓ Scans Next.js frontend
+  ✓ Scans Python service
+  ✓ Scans Java backend
+  ✓ Generates HTML reports for each
+  ✓ Opens reports folder automatically
+
+Results will be in: C:\Users\cczin\appservice-scan\reports\
+
+═══════════════════════════════════════════════════════════════════════════════
+
+OPTION 2: MANUAL COMMANDS (MORE CONTROL)
+─────────────────────────────────────────
+
+Open Command Prompt or PowerShell, then run:
+
+1. Go to DepGuard directory:
+   cd C:\Users\cczin\appservice-scan
+
+2. Scan Next.js Frontend:
+   node bin\depguard.js scan --path "C:\Users\cczin\dependency-bad\nextjs-frontend"
+
+3. Scan Python Service:
+   node bin\depguard.js scan --path "C:\Users\cczin\dependency-bad\python-service"
+
+4. Scan Java Backend:
+   node bin\depguard.js scan --path "C:\Users\cczin\dependency-bad\java-backend"
+
+═══════════════════════════════════════════════════════════════════════════════
+
+OPTION 3: ADVANCED COMMANDS
+────────────────────────────
+
+Show only REACHABLE vulnerabilities (reduces noise):
+  node bin\depguard.js scan --path "C:\Users\cczin\dependency-bad\nextjs-frontend" --reachable-only
+
+Show only CRITICAL vulnerabilities:
+  node bin\depguard.js scan --path "C:\Users\cczin\dependency-bad\nextjs-frontend" --severity critical
+
+Generate HTML report:
+  node bin\depguard.js scan --path "C:\Users\cczin\dependency-bad\nextjs-frontend" --output html --file report.html
+
+Detailed analysis:
+  node bin\depguard.js scan --path "C:\Users\cczin\dependency-bad\nextjs-frontend" --deep-analysis --verbose
+
+Combined (best for security review):
+  node bin\depguard.js scan --path "C:\Users\cczin\dependency-bad\nextjs-frontend" --reachable-only --severity high --output html --file security-report.html
+
+═══════════════════════════════════════════════════════════════════════════════
+
+UNDERSTANDING THE OUTPUT
+─────────────────────────
+
+When you see this:
+
+  [CRITICAL] 🔴 ⚠️  REACHABLE (95% confidence)
+  Package: lodash@4.17.20
+  Vulnerability: CVE-2021-23337
+
+  Reachable Path:
+    src/app.js:15 → express-middleware
+    → node_modules/lodash/template.js:254 [VULNERABLE]
+
+  Recommendation: Update to lodash@4.17.21 or higher
+
+It means:
+  ⚠️  This vulnerability CAN be exploited (95% confident)
+  📍 Shows EXACTLY how it's reached in your code
+  🔧 Tells you HOW to fix it
+
+═══════════════════════════════════════════════════════════════════════════════
+
+QUICK REFERENCE
+───────────────
+
+Your project structure:
+  C:\Users\cczin\dependency-bad\
+  ├── nextjs-frontend/     → JavaScript/TypeScript (Node.js)
+  ├── python-service/      → Python
+  ├── java-backend/        → Java (Maven)
+  └── go-service/          → Go (not yet supported)
+
+DepGuard location:
+  C:\Users\cczin\appservice-scan\
+
+Commands:
+  Basic scan:              node bin\depguard.js scan --path "<folder>"
+  Reachable only:          --reachable-only
+  Filter severity:         --severity critical|high|medium|low
+  HTML report:             --output html --file report.html
+  JSON report:             --output json --file report.json
+  SARIF (GitHub):          --output sarif --file report.sarif
+  Deep analysis:           --deep-analysis
+  Verbose:                 --verbose
+
+═══════════════════════════════════════════════════════════════════════════════
+
+TYPICAL WORKFLOW
+────────────────
+
+1. Run automated scan:
+   → Double-click scan-dependency-bad.bat
+
+2. Review HTML reports:
+   → Open C:\Users\cczin\appservice-scan\reports\
+
+3. Identify critical reachable vulnerabilities:
+   → Look for 🔴 REACHABLE with high confidence
+
+4. Update vulnerable packages:
+   → Follow the recommendations in the report
+
+5. Re-scan to verify:
+   → Run the scan again to confirm fixes
+
+═══════════════════════════════════════════════════════════════════════════════
+
+TROUBLESHOOTING
+───────────────
+
+Problem: "Command not found" or errors
+Solution: Make sure you're in the right directory
+  cd C:\Users\cczin\appservice-scan
+
+Problem: "No files found"
+Solution: Check that the target path is correct and contains source files
+
+Problem: No vulnerabilities shown but expected some
+Solution: The sample database only has data for common packages
+          (lodash, axios, express, jsonwebtoken)
+
+═══════════════════════════════════════════════════════════════════════════════
+
+NEED MORE HELP?
+───────────────
+
+Detailed instructions:  HOW_TO_SCAN.md
+Quick start guide:      QUICKSTART.md
+Full documentation:     README.md
+Architecture details:   ARCHITECTURE.md
+
+═══════════════════════════════════════════════════════════════════════════════
+
+🚀 READY TO START?
+
+→ Double-click: scan-dependency-bad.bat
+→ Or run: node bin\depguard.js scan --path "C:\Users\cczin\dependency-bad\nextjs-frontend"
+
+═══════════════════════════════════════════════════════════════════════════════
