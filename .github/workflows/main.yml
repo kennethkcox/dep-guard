@@ -1,0 +1,17 @@
+scan:
+  depth: 10
+  excludePaths:
+    - test/**
+    - build/**
+    - dist/**
+
+reachability:
+  analysisDepth: 10
+  minConfidence: 0.5
+  trackDynamicCalls: true
+  includeIndirectPaths: true
+
+reporting:
+  format: table
+  verbosity: normal
+  onlyReachable: false
