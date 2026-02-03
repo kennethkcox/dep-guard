@@ -17,19 +17,19 @@
     <PackageReference Include="System.Security.Cryptography.Xml" Version="4.7.0" />
 
     <!-- CVE-2021-34485 - Information Disclosure -->
-    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="3.1.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="3.1.18" />
 
     <!-- CVE-2022-41032 - Privilege Escalation -->
-    <PackageReference Include="NuGet.Commands" Version="5.9.0" />
+    <PackageReference Include="NuGet.Commands" Version="5.11.5" />
 
     <!-- Newtonsoft.Json - older versions have known vulnerabilities -->
-    <PackageReference Include="Newtonsoft.Json" Version="11.0.2" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
 
     <!-- log4net - CVE-2018-1285 -->
-    <PackageReference Include="log4net" Version="2.0.8" />
+    <PackageReference Include="log4net" Version="2.0.10" />
 
     <!-- ImageSharp - CVE-2022-24741 -->
-    <PackageReference Include="SixLabors.ImageSharp" Version="1.0.3" />
+    <PackageReference Include="SixLabors.ImageSharp" Version="2.1.11" />
   </ItemGroup>
 
 </Project>
