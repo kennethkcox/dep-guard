@@ -13,7 +13,6 @@
  */
 
 const fs = require('fs');
-const path = require('path');
 const ReachabilityAnalyzer = require('./core/ReachabilityAnalyzer');
 const GenericManifestFinder = require('./core/GenericManifestFinder');
 const GenericEntryPointDetector = require('./core/GenericEntryPointDetector');
@@ -22,6 +21,10 @@ const JavaScriptAnalyzer = require('./analyzers/JavaScriptAnalyzer');
 const PythonAnalyzer = require('./analyzers/PythonAnalyzer');
 const JavaAnalyzer = require('./analyzers/JavaAnalyzer');
 const Reporter = require('./reporting/Reporter');
+const DependencyResolver = require('./utils/DependencyResolver');
+const { getLogger } = require('./utils/logger');
+const { ManifestParsingError, FileSystemError } = require('./utils/errors');
+const Validator = require('./utils/validator');
 
 class DepGuardScanner2 {
     constructor(options = {}) {
@@ -34,6 +37,8 @@ class DepGuardScanner2 {
             verbose: options.verbose || false,
             ...options
         };
+
+        this.logger = getLogger().child({ component: 'DepGuardScanner' });
 
         this.reachabilityAnalyzer = new ReachabilityAnalyzer({
             maxDepth: this.options.maxDepth,
@@ -56,6 +61,7 @@ class DepGuardScanner2 {
         this.results = [];
         this.manifests = [];
         this.allDependencies = [];
+        this.dependencyResolver = new DependencyResolver(this.options);
     }
 
     /**
@@ -148,29 +154,122 @@ class DepGuardScanner2 {
 
         for (const manifest of this.manifests) {
             try {
-                const deps = await this.extractDependencies(manifest);
+                // Extract direct dependencies from manifest
+                const directDeps = await this.extractDependencies(manifest);
+
+                // Resolve transitive dependencies
+                let transitiveDeps = [];
+                if (this.options.resolveTransitive !== false) {
+                    transitiveDeps = await this.resolveTransitiveDependencies(manifest);
+                }
+
+                // Merge and deduplicate
+                const allDeps = this.mergeDependencies(directDeps, transitiveDeps);
+
                 this.allDependencies.push({
                     manifest,
-                    dependencies: deps
+                    dependencies: allDeps
                 });
 
                 if (this.options.verbose) {
-                    console.log(`  ✓ ${manifest.filename}: ${deps.length} dependencies`);
+                    const directCount = directDeps.length;
+                    const transitiveCount = allDeps.length - directCount;
+                    console.log(`  ✓ ${manifest.filename}: ${directCount} direct, ${transitiveCount} transitive`);
+                } else {
+                    console.log(`  ✓ ${manifest.filename}: ${allDeps.length} dependencies`);
                 }
             } catch (error) {
-                console.warn(`  ⚠️  Error parsing ${manifest.filename}: ${error.message}`);
+                this.logger.warn('Error parsing manifest', {
+                    manifest: manifest.filename,
+                    error: error.message
+                });
+
+                // Re-throw critical errors, allow scanner to continue for non-critical
+                if (error instanceof ManifestParsingError || error instanceof FileSystemError) {
+                    // Log but continue - don't fail entire scan for one bad manifest
+                    console.warn(`  ⚠️  Error parsing ${manifest.filename}: ${error.message}`);
+                } else {
+                    throw error;
+                }
             }
         }
 
         const totalDeps = this.allDependencies.reduce((sum, m) => sum + m.dependencies.length, 0);
-        console.log(`  ✓ Total dependencies: ${totalDeps}`);
+        const directDeps = this.allDependencies.reduce((sum, m) =>
+            sum + m.dependencies.filter(d => !d.transitive).length, 0);
+        const transitiveDeps = totalDeps - directDeps;
+
+        console.log(`  ✓ Total dependencies: ${totalDeps} (${directDeps} direct, ${transitiveDeps} transitive)`);
+    }
+
+    /**
+     * Resolves transitive dependencies for a manifest
+     */
+    async resolveTransitiveDependencies(manifest) {
+        try {
+            switch (manifest.ecosystem) {
+                case 'maven':
+                    return this.dependencyResolver.resolveMavenDependencies(manifest.path);
+
+                case 'npm':
+                    return this.dependencyResolver.resolveNpmDependencies(manifest.path);
+
+                case 'pypi':
+                    return this.dependencyResolver.resolvePythonDependencies(manifest.path);
+
+                default:
+                    // No transitive resolution for other ecosystems yet
+                    return [];
+            }
+        } catch (error) {
+            this.logger.warn('Failed to resolve transitive dependencies', {
+                manifest: manifest.filename,
+                error: error.message
+            });
+            return [];
+        }
+    }
+
+    /**
+     * Merges direct and transitive dependencies, removing duplicates
+     */
+    mergeDependencies(directDeps, transitiveDeps) {
+        const merged = new Map();
+
+        // Add direct dependencies first
+        for (const dep of directDeps) {
+            const key = `${dep.name}@${dep.version}`;
+            merged.set(key, { ...dep, transitive: false });
+        }
+
+        // Add transitive dependencies (don't override direct ones)
+        for (const dep of transitiveDeps) {
+            const key = `${dep.name}@${dep.version}`;
+            if (!merged.has(key)) {
+                merged.set(key, { ...dep, transitive: true });
+            }
+        }
+
+        return Array.from(merged.values());
     }
 
     /**
      * Extract dependencies from a manifest
      */
     async extractDependencies(manifest) {
-        const content = fs.readFileSync(manifest.path, 'utf8');
+        let content;
+
+        try {
+            // Validate file size before reading
+            Validator.validateFileSize(manifest.path, 50 * 1024 * 1024); // Max 50MB
+            content = fs.readFileSync(manifest.path, 'utf8');
+        } catch (error) {
+            throw new FileSystemError(
+                `Failed to read manifest: ${error.message}`,
+                manifest.path,
+                'read'
+            );
+        }
 
         switch (manifest.ecosystem) {
             case 'npm':
@@ -206,8 +305,16 @@ class DepGuardScanner2 {
     extractNpmDependencies(content, manifest) {
         try {
             if (manifest.filename === 'package.json') {
+                // Validate JSON size
+                Validator.validateJSONSize(content);
+
                 const data = JSON.parse(content);
                 const deps = { ...data.dependencies, ...data.devDependencies };
+
+                // Validate dependency count
+                const depCount = Object.keys(deps).length;
+                Validator.validateDependencyCount(depCount);
+
                 return Object.entries(deps).map(([name, version]) => ({
                     name,
                     version: version.replace(/[\^~>=<]/g, '').trim(),
@@ -218,7 +325,11 @@ class DepGuardScanner2 {
             // TODO: Parse package-lock.json for exact versions
             return [];
         } catch (error) {
-            throw new Error(`Failed to parse package.json: ${error.message}`);
+            throw new ManifestParsingError(
+                `Failed to parse package.json: ${error.message}`,
+                manifest.path,
+                { ecosystem: 'npm' }
+            );
         }
     }
 
@@ -398,8 +509,16 @@ class DepGuardScanner2 {
     extractPhpDependencies(content, manifest) {
         try {
             if (manifest.filename === 'composer.json') {
+                // Validate JSON size
+                Validator.validateJSONSize(content);
+
                 const data = JSON.parse(content);
                 const deps = { ...data.require, ...data['require-dev'] };
+
+                // Validate dependency count
+                const depCount = Object.keys(deps).length;
+                Validator.validateDependencyCount(depCount);
+
                 return Object.entries(deps)
                     .filter(([name]) => name !== 'php')  // Skip PHP itself
                     .map(([name, version]) => ({
@@ -411,7 +530,11 @@ class DepGuardScanner2 {
             }
             return [];
         } catch (error) {
-            throw new Error(`Failed to parse composer.json: ${error.message}`);
+            throw new ManifestParsingError(
+                `Failed to parse composer.json: ${error.message}`,
+                manifest.path,
+                { ecosystem: 'packagist' }
+            );
         }
     }
 
@@ -469,21 +592,23 @@ class DepGuardScanner2 {
                         }
                         break;
 
-                    case 'pypi':
+                    case 'pypi': {
                         const pyAnalyzer = new PythonAnalyzer(this.reachabilityAnalyzer, {
                             ...this.options,
                             projectPath: manifestDir
                         });
                         pyAnalyzer.analyzeProject(manifestDir);
                         break;
+                    }
 
-                    case 'maven':
+                    case 'maven': {
                         const javaAnalyzer = new JavaAnalyzer(this.reachabilityAnalyzer, {
                             ...this.options,
                             projectPath: manifestDir
                         });
                         javaAnalyzer.analyzeProject(manifestDir);
                         break;
+                    }
 
                     default:
                         if (this.options.verbose) {
@@ -491,6 +616,11 @@ class DepGuardScanner2 {
                         }
                 }
             } catch (error) {
+                this.logger.warn('Error analyzing manifest directory', {
+                    directory: manifest.directory,
+                    ecosystem: manifest.ecosystem,
+                    error: error.message
+                });
                 console.warn(`  ⚠️  Error analyzing ${manifest.directory}: ${error.message}`);
             }
         }
@@ -507,26 +637,33 @@ class DepGuardScanner2 {
 
         // Get all source files from call graph
         const callGraph = this.reachabilityAnalyzer.getCallGraph();
-        const files = Array.from(callGraph.nodes.keys())
-            .map(node => {
-                // Handle both Unix and Windows paths (C:\path\file.js:function)
-                // Find the last colon that's not part of a drive letter
-                const lastColonIndex = node.lastIndexOf(':');
-                if (lastColonIndex === -1) {
-                    return node;  // No colon, entire string is the file
-                }
+        const fileSet = new Set(); // Use Set for O(1) uniqueness check
 
+        for (const node of callGraph.nodes.keys()) {
+            // Handle both Unix and Windows paths (C:\path\file.js:function)
+            // Find the last colon that's not part of a drive letter
+            const lastColonIndex = node.lastIndexOf(':');
+            let file;
+
+            if (lastColonIndex === -1) {
+                file = node;  // No colon, entire string is the file
+            } else {
                 // Check if this might be a Windows drive letter (single char before first colon)
                 const beforeColon = node.substring(0, lastColonIndex);
                 if (beforeColon.length === 1) {
                     // This is likely "C:" drive letter, return whole string
-                    return node;
+                    file = node;
+                } else {
+                    file = beforeColon;
                 }
+            }
 
-                return beforeColon;
-            })
-            .filter(f => f)
-            .filter((f, i, arr) => arr.indexOf(f) === i);  // Unique
+            if (file) {
+                fileSet.add(file);
+            }
+        }
+
+        const files = Array.from(fileSet);
 
         // Detect entry points
         const entryPoints = this.entryPointDetector.detectEntryPoints(files, callGraph);
@@ -558,28 +695,60 @@ class DepGuardScanner2 {
      * Phase 6: Perform reachability analysis
      */
     async performReachabilityAnalysis() {
+        let vulnerabilityCount = 0;
+
+        // Set the project path for import detection
+        this.reachabilityAnalyzer.setProjectPath(this.options.projectPath);
+
         // Map vulnerabilities to functions
         for (const manifestDeps of this.allDependencies) {
             const vulnDb = this.vulnDatabases.get(manifestDeps.manifest.ecosystem);
 
+            if (!vulnDb) {
+                this.logger.debug('No vulnerability database for ecosystem', {
+                    ecosystem: manifestDeps.manifest.ecosystem
+                });
+                continue;
+            }
+
             for (const dep of manifestDeps.dependencies) {
                 const vulns = vulnDb.getVulnerabilities(dep.name, dep.version);
 
+                if (vulns.length > 0) {
+                    this.logger.debug('Found vulnerabilities for dependency', {
+                        package: dep.name,
+                        version: dep.version,
+                        count: vulns.length
+                    });
+                }
+
                 for (const vuln of vulns) {
+                    vulnerabilityCount++;
+
+                    // Ensure package name is set in vulnerability
+                    if (!vuln.package) {
+                        vuln.package = dep.name;
+                    }
+                    if (!vuln.name) {
+                        vuln.name = dep.name;
+                    }
+
                     // For each vulnerable function, add as target
-                    if (vuln.affectedFunctions) {
+                    if (vuln.affectedFunctions && vuln.affectedFunctions.length > 0) {
                         for (const func of vuln.affectedFunctions) {
                             const location = `node_modules/${dep.name}/${func}`;
                             this.reachabilityAnalyzer.addVulnerabilityTarget(location, vuln);
                         }
                     } else {
-                        // Generic package-level vulnerability
-                        const location = `node_modules/${dep.name}/index.js`;
+                        // Generic package-level vulnerability - use package name as location
+                        const location = dep.name;
                         this.reachabilityAnalyzer.addVulnerabilityTarget(location, vuln);
                     }
                 }
             }
         }
+
+        this.logger.info('Added vulnerabilities to analyzer', { count: vulnerabilityCount });
 
         // Analyze reachability for all vulnerabilities
         this.results = this.reachabilityAnalyzer.analyzeAll();

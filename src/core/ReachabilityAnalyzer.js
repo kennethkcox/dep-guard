@@ -3,6 +3,8 @@
  * Performs sophisticated static analysis to determine if vulnerable code is actually reachable
  */
 
+const ImportDetector = require('../utils/ImportDetector');
+
 class ReachabilityAnalyzer {
   constructor(options = {}) {
     this.options = {
@@ -10,6 +12,7 @@ class ReachabilityAnalyzer {
       trackDynamicCalls: options.trackDynamicCalls !== false,
       minConfidence: options.minConfidence || 0.5,
       includeIndirectPaths: options.includeIndirectPaths !== false,
+      useImportHeuristics: options.useImportHeuristics !== false,
       ...options
     };
 
@@ -18,6 +21,16 @@ class ReachabilityAnalyzer {
     this.entryPoints = new Set();
     this.vulnerableLocations = new Map(); // package -> vulnerable functions
     this.analysisCache = new Map();
+    this.importDetector = new ImportDetector();
+    this.reachableFiles = new Set(); // Files reachable from entry points
+    this.projectPath = null; // Project root for import scanning
+  }
+
+  /**
+   * Sets the project path for import detection
+   */
+  setProjectPath(projectPath) {
+    this.projectPath = projectPath;
   }
 
   /**
@@ -120,10 +133,35 @@ class ReachabilityAnalyzer {
    */
   analyzeAll() {
     const results = [];
+    const logger = require('../utils/logger').getLogger();
+
+    // First, identify all files reachable from entry points
+    this.identifyReachableFiles();
+
+    logger.debug('Starting reachability analysis', {
+      vulnerablePackages: this.vulnerableLocations.size,
+      reachableFiles: this.reachableFiles.size,
+      useImportHeuristics: this.options.useImportHeuristics
+    });
 
     for (const [packageName, vulnerabilities] of this.vulnerableLocations) {
+      logger.debug('Analyzing package', { packageName, vulnCount: vulnerabilities.length });
+
       for (const vuln of vulnerabilities) {
-        const reachability = this.analyzeReachability(vuln.location);
+        // Try traditional call graph analysis first
+        let reachability = this.analyzeReachability(vuln.location);
+
+        // If not reachable via call graph, try import-based heuristics
+        if (!reachability.isReachable && this.options.useImportHeuristics) {
+          const importReachability = this.analyzeViaImports(packageName, vuln);
+          if (importReachability.isReachable) {
+            reachability = importReachability;
+            logger.info('Found reachable via imports', {
+              package: packageName,
+              confidence: reachability.confidence
+            });
+          }
+        }
 
         if (reachability.isReachable) {
           results.push({
@@ -135,10 +173,13 @@ class ReachabilityAnalyzer {
             reachability: {
               isReachable: true,
               confidence: reachability.confidence,
-              shortestPathLength: reachability.shortestPathLength,
-              paths: reachability.paths.slice(0, 3), // Top 3 paths
-              totalPathsFound: reachability.paths.length
-            }
+              shortestPathLength: reachability.shortestPathLength || 0,
+              paths: reachability.paths ? reachability.paths.slice(0, 3) : [],
+              totalPathsFound: reachability.paths ? reachability.paths.length : 0,
+              detectionMethod: reachability.method || 'call-graph'
+            },
+            isReachable: true,
+            confidence: reachability.confidence
           });
         }
       }
@@ -147,6 +188,129 @@ class ReachabilityAnalyzer {
     return results.sort((a, b) =>
       b.reachability.confidence - a.reachability.confidence
     );
+  }
+
+  /**
+   * Identifies all files reachable from entry points via call graph
+   */
+  identifyReachableFiles() {
+    this.reachableFiles.clear();
+
+    for (const entryPoint of this.entryPoints) {
+      // Extract file path from entry point (format: file:function)
+      const filePath = entryPoint.split(':')[0];
+      this.reachableFiles.add(filePath);
+
+      // Add all files reachable from this entry point
+      this.traverseCallGraphForFiles(entryPoint);
+    }
+  }
+
+  /**
+   * Traverses call graph to find all reachable files
+   */
+  traverseCallGraphForFiles(startNode) {
+    const visited = new Set();
+    const queue = [startNode];
+
+    while (queue.length > 0) {
+      const node = queue.shift();
+      if (visited.has(node)) continue;
+      visited.add(node);
+
+      // Extract file from node
+      const filePath = node.split(':')[0];
+      this.reachableFiles.add(filePath);
+
+      // Add connected nodes
+      const targets = this.callGraph.get(node) || [];
+      for (const { target } of targets) {
+        if (!visited.has(target)) {
+          queue.push(target);
+        }
+      }
+    }
+  }
+
+  /**
+   * Analyzes reachability via import detection
+   */
+  analyzeViaImports(packageName, vuln) {
+    try {
+      const logger = require('../utils/logger').getLogger();
+
+      // If we have a project path, scan it for imports
+      let filesToCheck = Array.from(this.reachableFiles);
+
+      // If reachableFiles is empty or small, scan the entire project
+      if (!filesToCheck || filesToCheck.length < 10) {
+        if (this.projectPath) {
+          logger.debug('Scanning entire project for imports', { projectPath: this.projectPath });
+          // Get all source files in project
+          const allFiles = [];
+          this.importDetector.walkDirectory(this.projectPath, (file) => {
+            allFiles.push(file);
+          });
+          filesToCheck = allFiles;
+          logger.debug('Found source files to scan', { count: filesToCheck.length });
+        }
+      }
+
+      // Check if package is imported in any file
+      const importResult = this.importDetector.isPackageImported(
+        packageName,
+        filesToCheck
+      );
+
+      if (importResult.imported) {
+        // Package is imported in code
+        const confidence = this.calculateImportBasedConfidence(importResult);
+
+        logger.debug('Package imported', {
+          package: packageName,
+          file: importResult.file,
+          confidence
+        });
+
+        return {
+          isReachable: confidence >= this.options.minConfidence,
+          confidence,
+          shortestPathLength: 1,
+          paths: [{
+            nodes: [importResult.file, `${packageName} (imported)`],
+            confidence
+          }],
+          method: 'import-detection'
+        };
+      }
+    } catch (error) {
+      // Ignore import detection errors
+      const logger = require('../utils/logger').getLogger();
+      logger.debug('Import detection error', { error: error.message });
+    }
+
+    return { isReachable: false, confidence: 0 };
+  }
+
+  /**
+   * Calculates confidence for import-based reachability
+   */
+  calculateImportBasedConfidence(importResult) {
+    let confidence = 0.6; // Base confidence for imports
+
+    // Higher confidence if multiple imports
+    if (importResult.imports && importResult.imports.length > 1) {
+      confidence = Math.min(0.8, 0.6 + (importResult.imports.length * 0.05));
+    }
+
+    // Use import-specific confidence if available
+    if (importResult.imports && importResult.imports.length > 0) {
+      const avgImportConfidence = importResult.imports.reduce((sum, imp) =>
+        sum + (imp.confidence || 0.8), 0) / importResult.imports.length;
+      confidence = Math.max(confidence, avgImportConfidence * 0.9);
+    }
+
+    return Math.min(0.85, confidence); // Cap at 0.85 for import-based detection
   }
 
   /**

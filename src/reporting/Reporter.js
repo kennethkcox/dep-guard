@@ -5,6 +5,8 @@
 
 const chalk = require('chalk');
 const fs = require('fs');
+const Validator = require('../utils/validator');
+const { getLogger } = require('../utils/logger');
 
 class Reporter {
   constructor(options = {}) {
@@ -14,24 +16,37 @@ class Reporter {
       onlyReachable: options.onlyReachable || false,
       ...options
     };
+    this.logger = getLogger().child({ component: 'Reporter' });
   }
 
   /**
    * Generates a report from scan results
    */
   generate(results, metadata = {}) {
-    switch (this.options.format) {
-      case 'json':
-        return this.generateJSON(results, metadata);
-      case 'html':
-        return this.generateHTML(results, metadata);
-      case 'sarif':
-        return this.generateSARIF(results, metadata);
-      case 'markdown':
-        return this.generateMarkdown(results, metadata);
-      case 'table':
-      default:
-        return this.generateTable(results, metadata);
+    try {
+      this.logger.debug('Generating report', { format: this.options.format, resultCount: results.length });
+
+      // Validate results
+      if (!Array.isArray(results)) {
+        throw new Error('Results must be an array');
+      }
+
+      switch (this.options.format) {
+        case 'json':
+          return this.generateJSON(results, metadata);
+        case 'html':
+          return this.generateHTML(results, metadata);
+        case 'sarif':
+          return this.generateSARIF(results, metadata);
+        case 'markdown':
+          return this.generateMarkdown(results, metadata);
+        case 'table':
+        default:
+          return this.generateTable(results, metadata);
+      }
+    } catch (error) {
+      this.logger.error('Failed to generate report', { error: error.message });
+      throw error;
     }
   }
 
@@ -47,14 +62,21 @@ class Reporter {
     output.push(chalk.bold('╠════════════════════════════════════════════════════════════════╣'));
 
     // Summary statistics
-    const stats = this.calculateStatistics(results);
+    const calculatedStats = this.calculateStatistics(results);
+    // Use provided metadata stats if available (richer source), otherwise calculated
+    const stats = {
+      ...calculatedStats,
+      totalDependencies: metadata.dependencies || calculatedStats.totalDependencies,
+      totalVulnerabilities: metadata.vulnerabilities || calculatedStats.totalVulnerabilities,
+      reachableVulnerabilities: metadata.reachableVulnerabilities || calculatedStats.reachableVulnerabilities
+    };
 
     output.push(chalk.bold(`║ Total Dependencies: ${String(stats.totalDependencies).padEnd(42)}║`));
     output.push(chalk.bold(`║ Vulnerabilities Found: ${String(stats.totalVulnerabilities).padEnd(38)}║`));
     output.push(chalk.bold(`║ Reachable Vulnerabilities: ${String(stats.reachableVulnerabilities).padEnd(34)}║`));
-    output.push(chalk.bold(`║ Critical: ${String(stats.critical).padEnd(51)}║`));
-    output.push(chalk.bold(`║ High: ${String(stats.high).padEnd(55)}║`));
-    output.push(chalk.bold(`║ Medium: ${String(stats.medium).padEnd(53)}║`));
+    output.push(chalk.bold(`║ Critical: ${String(calculatedStats.critical).padEnd(51)}║`));
+    output.push(chalk.bold(`║ High: ${String(calculatedStats.high).padEnd(55)}║`));
+    output.push(chalk.bold(`║ Medium: ${String(calculatedStats.medium).padEnd(53)}║`));
     output.push(chalk.bold('╚════════════════════════════════════════════════════════════════╝\n'));
 
     // Filter results if needed

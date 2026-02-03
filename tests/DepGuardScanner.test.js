@@ -1,5 +1,5 @@
 /**
- * Integration tests for DepGuardScanner
+ * Integration tests for DepGuardScanner v2
  */
 
 const DepGuardScanner = require('../src/DepGuardScanner');
@@ -24,107 +24,152 @@ describe('DepGuardScanner', () => {
     }
   });
 
-  describe('detectProjectType', () => {
-    test('should detect JavaScript project', () => {
-      const packageJson = { name: 'test', version: '1.0.0', dependencies: {} };
-      fs.writeFileSync(
-        path.join(testProjectDir, 'package.json'),
-        JSON.stringify(packageJson)
-      );
-
+  describe('constructor', () => {
+    test('should initialize with default options', () => {
       scanner = new DepGuardScanner({ projectPath: testProjectDir });
-      const type = scanner.detectProjectType();
 
-      expect(type).toBe('javascript');
+      expect(scanner.options.projectPath).toBe(testProjectDir);
+      expect(scanner.options.maxDepth).toBe(10);
+      expect(scanner.options.minConfidence).toBe(0.5);
     });
 
-    test('should detect Python project', () => {
-      fs.writeFileSync(path.join(testProjectDir, 'requirements.txt'), '');
+    test('should accept custom options', () => {
+      scanner = new DepGuardScanner({
+        projectPath: testProjectDir,
+        maxDepth: 15,
+        minConfidence: 0.7,
+        deepAnalysis: true
+      });
 
-      scanner = new DepGuardScanner({ projectPath: testProjectDir });
-      const type = scanner.detectProjectType();
-
-      expect(type).toBe('python');
+      expect(scanner.options.maxDepth).toBe(15);
+      expect(scanner.options.minConfidence).toBe(0.7);
+      expect(scanner.options.deepAnalysis).toBe(true);
     });
 
-    test('should detect Java project', () => {
-      fs.writeFileSync(path.join(testProjectDir, 'pom.xml'), '<project></project>');
-
+    test('should initialize required components', () => {
       scanner = new DepGuardScanner({ projectPath: testProjectDir });
-      const type = scanner.detectProjectType();
 
-      expect(type).toBe('java');
+      expect(scanner.reachabilityAnalyzer).toBeDefined();
+      expect(scanner.manifestFinder).toBeDefined();
+      expect(scanner.entryPointDetector).toBeDefined();
     });
   });
 
-  describe('parsePackageJson', () => {
-    test('should parse dependencies', () => {
+  describe('scan', () => {
+    test('should return error for project without manifests', async () => {
+      scanner = new DepGuardScanner({ projectPath: testProjectDir });
+      const result = await scanner.scan();
+
+      expect(result.success).toBe(false);
+      expect(result.error).toContain('No dependency manifests found');
+    });
+
+    test('should scan JavaScript project with package.json', async () => {
       const packageJson = {
-        name: 'test',
+        name: 'test-project',
         version: '1.0.0',
         dependencies: {
-          'lodash': '^4.17.20',
-          'express': '~4.17.1'
-        },
-        devDependencies: {
-          'jest': '^29.0.0'
+          'chalk': '^4.1.2'
         }
       };
 
       fs.writeFileSync(
         path.join(testProjectDir, 'package.json'),
-        JSON.stringify(packageJson)
+        JSON.stringify(packageJson, null, 2)
       );
 
-      scanner = new DepGuardScanner({ projectPath: testProjectDir });
-      const deps = scanner.parsePackageJson(path.join(testProjectDir, 'package.json'));
-
-      expect(deps.length).toBe(3);
-      expect(deps.some(d => d.name === 'lodash')).toBe(true);
-      expect(deps.some(d => d.name === 'express')).toBe(true);
-      expect(deps.some(d => d.name === 'jest')).toBe(true);
-    });
-
-    test('should clean version strings', () => {
-      const packageJson = {
-        name: 'test',
-        dependencies: {
-          'lodash': '^4.17.20'
-        }
-      };
-
+      // Create a simple JS file
       fs.writeFileSync(
-        path.join(testProjectDir, 'package.json'),
-        JSON.stringify(packageJson)
+        path.join(testProjectDir, 'index.js'),
+        'const chalk = require("chalk");\nconsole.log(chalk.green("Hello"));'
       );
 
       scanner = new DepGuardScanner({ projectPath: testProjectDir });
-      const deps = scanner.parsePackageJson(path.join(testProjectDir, 'package.json'));
+      const result = await scanner.scan();
 
-      expect(deps[0].version).toBe('4.17.20');
-    });
+      expect(result.success).toBe(true);
+      expect(result.statistics).toBeDefined();
+      expect(result.statistics.manifests).toBe(1);
+    }, 30000); // Allow 30s for network calls
   });
 
   describe('getStatistics', () => {
-    test('should return statistics', () => {
+    test('should return statistics object', () => {
       scanner = new DepGuardScanner({ projectPath: testProjectDir });
+
+      // Set some test results
       scanner.results = [
-        {
-          vulnerability: { severity: 'CRITICAL' },
-          reachability: { isReachable: true }
-        },
-        {
-          vulnerability: { severity: 'HIGH' },
-          reachability: { isReachable: false }
-        }
+        { severity: 'CRITICAL', confidence: 0.9 },
+        { severity: 'HIGH', confidence: 0.7 }
       ];
+      scanner.manifests = [{ path: 'package.json' }];
+      scanner.allDependencies = [{ dependencies: [{ name: 'lodash' }] }];
 
       const stats = scanner.getStatistics();
 
-      expect(stats.totalVulnerabilities).toBe(2);
-      expect(stats.reachableVulnerabilities).toBe(1);
-      expect(stats.critical).toBe(1);
-      expect(stats.high).toBe(1);
+      expect(stats).toBeDefined();
+      expect(typeof stats.manifests).toBe('number');
+      expect(typeof stats.dependencies).toBe('number');
+    });
+
+    test('should count vulnerabilities by severity', () => {
+      scanner = new DepGuardScanner({ projectPath: testProjectDir });
+      scanner.results = [
+        { severity: 'CRITICAL', confidence: 0.9, isReachable: true },
+        { severity: 'CRITICAL', confidence: 0.8, isReachable: true },
+        { severity: 'HIGH', confidence: 0.7, isReachable: true },
+        { severity: 'MEDIUM', confidence: 0.6, isReachable: false }
+      ];
+      scanner.manifests = [];
+      scanner.allDependencies = [];
+
+      const stats = scanner.getStatistics();
+
+      expect(stats.reachableVulnerabilities).toBe(3);
+      expect(stats.unreachableVulnerabilities).toBe(1);
+    });
+  });
+
+  describe('generateReport', () => {
+    test('should generate table report', async () => {
+      const packageJson = {
+        name: 'test-project',
+        version: '1.0.0',
+        dependencies: {}
+      };
+
+      fs.writeFileSync(
+        path.join(testProjectDir, 'package.json'),
+        JSON.stringify(packageJson, null, 2)
+      );
+
+      scanner = new DepGuardScanner({ projectPath: testProjectDir });
+      await scanner.scan();
+
+      // Should not throw
+      await expect(scanner.generateReport('table')).resolves.not.toThrow();
+    });
+
+    test('should generate JSON report', async () => {
+      const packageJson = {
+        name: 'test-project',
+        version: '1.0.0',
+        dependencies: {}
+      };
+
+      fs.writeFileSync(
+        path.join(testProjectDir, 'package.json'),
+        JSON.stringify(packageJson, null, 2)
+      );
+
+      scanner = new DepGuardScanner({ projectPath: testProjectDir });
+      await scanner.scan();
+
+      const report = await scanner.generateReport('json');
+      expect(typeof report).toBe('string');
+
+      const parsed = JSON.parse(report);
+      expect(parsed).toBeDefined();
     });
   });
 });

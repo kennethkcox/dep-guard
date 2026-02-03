@@ -10,6 +10,9 @@ const path = require('path');
 const fs = require('fs');
 const chalk = require('chalk');
 const DepGuardScanner = require('../src/DepGuardScanner');
+const Validator = require('../src/utils/validator');
+const { configureLogger } = require('../src/utils/logger');
+const { ValidationError, DepGuardError } = require('../src/utils/errors');
 
 const program = new Command();
 
@@ -33,16 +36,35 @@ program
   .option('-v, --verbose', 'Verbose output', false)
   .action(async (options) => {
     try {
+      // Configure logger
+      const logLevel = options.verbose ? 'DEBUG' : 'INFO';
+      configureLogger({ level: logLevel });
+
       console.log(chalk.bold.cyan('╔════════════════════════════════════════════════════════════════╗'));
       console.log(chalk.bold.cyan('║                    DepGuard v2.0.0                            ║'));
       console.log(chalk.bold.cyan('║     Advanced Dependency Vulnerability Scanner                 ║'));
       console.log(chalk.bold.cyan('║              with Reachability Analysis                        ║'));
       console.log(chalk.bold.cyan('╚════════════════════════════════════════════════════════════════╝\n'));
 
+      // Validate inputs
+      const projectPath = path.resolve(options.path);
+      const maxDepth = Validator.validateInteger(options.depth, 'depth', 1, 100);
+      const minConfidence = Validator.validateConfidence(options.confidence, 'confidence');
+      const outputFormat = Validator.validateOutputFormat(options.output);
+
+      if (options.severity) {
+        Validator.validateSeverity(options.severity);
+      }
+
+      // Validate project path exists
+      if (!fs.existsSync(projectPath)) {
+        throw new ValidationError('Project path does not exist', 'path', projectPath);
+      }
+
       const scanner = new DepGuardScanner({
-        projectPath: path.resolve(options.path),
-        maxDepth: parseInt(options.depth),
-        minConfidence: parseFloat(options.confidence),
+        projectPath,
+        maxDepth,
+        minConfidence,
         deepAnalysis: options.deepAnalysis,
         entryPointConfidence: 0.6, // Default
         verbose: options.verbose
@@ -60,9 +82,10 @@ program
       // Filter by severity if specified
       let filteredResults = results;
       if (options.severity) {
+        const severityLower = options.severity.toLowerCase();
         filteredResults = results.filter(r =>
           r.vulnerability && r.vulnerability.severity &&
-          r.vulnerability.severity.toLowerCase() === options.severity.toLowerCase()
+          r.vulnerability.severity.toLowerCase() === severityLower
         );
       }
 
@@ -72,10 +95,10 @@ program
       }
 
       // Generate and display report
-      const reportContent = await scanner.generateReport(options.output);
+      const reportContent = await scanner.generateReport(outputFormat);
 
       // If output is table or markdown, print to console, otherwise just save or print basic info
-      if (['table', 'markdown'].includes(options.output)) {
+      if (['table', 'markdown'].includes(outputFormat)) {
         console.log(reportContent);
       } else {
         if (!options.file) {
@@ -85,7 +108,13 @@ program
 
       // Save to file if specified
       if (options.file) {
-        fs.writeFileSync(options.file, reportContent);
+        // Validate output file path
+        const outputDir = path.dirname(options.file);
+        if (!fs.existsSync(outputDir)) {
+          fs.mkdirSync(outputDir, { recursive: true });
+        }
+
+        fs.writeFileSync(options.file, reportContent, 'utf8');
         console.log(chalk.green(`\n✓ Report saved to: ${options.file}`));
       }
 
@@ -102,10 +131,25 @@ program
       }
 
     } catch (error) {
-      console.error(chalk.red('Error during scan:'), error.message);
+      if (error instanceof ValidationError) {
+        console.error(chalk.red('Validation Error:'), error.message);
+        if (error.details) {
+          console.error(chalk.gray('Details:'), JSON.stringify(error.details, null, 2));
+        }
+      } else if (error instanceof DepGuardError) {
+        console.error(chalk.red(`${error.name}:`), error.message);
+        if (error.details && options.verbose) {
+          console.error(chalk.gray('Details:'), JSON.stringify(error.details, null, 2));
+        }
+      } else {
+        console.error(chalk.red('Error during scan:'), error.message);
+      }
+
       if (options.verbose) {
+        console.error(chalk.gray('\nStack trace:'));
         console.error(error.stack);
       }
+
       process.exit(1);
     }
   });

@@ -6,12 +6,15 @@
 
 const fs = require('fs');
 const path = require('path');
+const { getLogger } = require('../utils/logger');
+const Validator = require('../utils/validator');
 
 class GenericEntryPointDetector {
   constructor(options = {}) {
     this.options = options;
     this.entryPoints = [];
     this.confidenceThreshold = options.confidenceThreshold || 0.6;
+    this.logger = getLogger().child({ component: 'GenericEntryPointDetector' });
   }
 
   /**
@@ -47,9 +50,20 @@ class GenericEntryPointDetector {
    */
   analyzeFile(file, callGraph) {
     const signals = [];
-    const content = fs.readFileSync(file, 'utf-8');
-    const basename = path.basename(file);
-    const extension = path.extname(file);
+
+    try {
+      // Check if file exists
+      if (!fs.existsSync(file)) {
+        this.logger.debug('File does not exist, skipping', { file });
+        return signals;
+      }
+
+      // Validate file size before reading (max 10MB for entry point analysis)
+      Validator.validateFileSize(file, 10 * 1024 * 1024);
+
+      const content = fs.readFileSync(file, 'utf-8');
+      const basename = path.basename(file);
+      const extension = path.extname(file);
 
     // Signal 1: HTTP Handler Signatures
     const httpSignal = this.detectHttpHandler(content, file);
@@ -84,19 +98,27 @@ class GenericEntryPointDetector {
       });
     }
 
-    // Signal 8: No incoming calls (potential entry point)
-    if (callGraph && callGraph.getIncomingCalls) {
-      const incomingCalls = callGraph.getIncomingCalls(file);
-      if (incomingCalls.length === 0 && signals.length > 0) {
-        signals.push({
-          type: 'NO_CALLERS',
-          confidence: 0.3,
-          reason: 'No internal callers (might be entry point)'
-        });
+      // Signal 8: No incoming calls (potential entry point)
+      if (callGraph && callGraph.getIncomingCalls) {
+        const incomingCalls = callGraph.getIncomingCalls(file);
+        if (incomingCalls.length === 0 && signals.length > 0) {
+          signals.push({
+            type: 'NO_CALLERS',
+            confidence: 0.3,
+            reason: 'No internal callers (might be entry point)'
+          });
+        }
       }
-    }
 
-    return signals;
+      return signals;
+    } catch (error) {
+      this.logger.warn('Error analyzing file for entry points', {
+        file,
+        error: error.message
+      });
+      // Return empty signals array on error
+      return signals;
+    }
   }
 
   /**
