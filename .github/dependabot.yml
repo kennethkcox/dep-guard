@@ -1,0 +1,52 @@
+version: 2
+updates:
+  # Enable version updates for npm dependencies
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+    open-pull-requests-limit: 10
+    labels:
+      - "dependencies"
+      - "automated"
+    commit-message:
+      prefix: "chore(deps)"
+      include: "scope"
+    ignore:
+      # Ignore major version updates for chalk (v5 is ESM-only)
+      - dependency-name: "chalk"
+        update-types: ["version-update:semver-major"]
+    groups:
+      # Group Babel packages together
+      babel:
+        patterns:
+          - "@babel/*"
+      # Group dev dependencies together
+      dev-dependencies:
+        dependency-type: "development"
+        update-types:
+          - "minor"
+          - "patch"
+
+  # Enable version updates for npm in examples
+  - package-ecosystem: "npm"
+    directory: "/examples/vulnerable-test-app"
+    schedule:
+      interval: "monthly"
+    open-pull-requests-limit: 3
+    labels:
+      - "examples"
+      - "dependencies"
+    # Don't auto-update vulnerable test apps
+    # (they're intentionally vulnerable for testing)
+
+  # Enable version updates for GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    labels:
+      - "ci"
+      - "dependencies"

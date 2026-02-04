@@ -1,0 +1,116 @@
+name: Dependency Security Check
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+  schedule:
+    # Run weekly on Mondays at 9 AM UTC
+    - cron: '0 9 * * 1'
+  workflow_dispatch:
+
+jobs:
+  dependency-audit:
+    name: Audit Dependencies
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run npm audit
+        run: npm audit --audit-level=moderate
+        continue-on-error: true
+
+      - name: Run DepGuard self-scan
+        run: |
+          node bin/depguard.js scan -p . --reachable-only -o json -f depguard-report.json
+          echo "::group::DepGuard Scan Results"
+          node bin/depguard.js scan -p . --reachable-only
+          echo "::endgroup::"
+
+      - name: Check for reachable vulnerabilities
+        run: |
+          # Extract reachable vulnerability count from JSON report
+          REACHABLE=$(node -e "const data = require('./depguard-report.json'); console.log(data.results.length);")
+          echo "Found $REACHABLE reachable vulnerabilities"
+
+          if [ "$REACHABLE" -gt 0 ]; then
+            echo "::warning::Found $REACHABLE reachable vulnerabilities in main codebase"
+            # Don't fail the build, just warn (vulnerable test apps are intentional)
+          else
+            echo "::notice::No reachable vulnerabilities found in main codebase ✓"
+          fi
+
+      - name: Upload DepGuard report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: depguard-report
+          path: depguard-report.json
+          retention-days: 30
+
+  test-suite:
+    name: Run Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests
+        run: npm test
+
+      - name: Test coverage
+        run: npm test -- --coverage
+        continue-on-error: true
+
+  outdated-check:
+    name: Check for Outdated Dependencies
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Check for outdated packages
+        run: |
+          echo "::group::Outdated Packages"
+          npm outdated || true
+          echo "::endgroup::"
+
+          # Count outdated packages
+          OUTDATED=$(npm outdated --json | node -e "const data = JSON.parse(require('fs').readFileSync(0)); console.log(Object.keys(data).length);")
+          echo "Found $OUTDATED outdated packages"
+
+          if [ "$OUTDATED" -gt 0 ]; then
+            echo "::notice::$OUTDATED packages have available updates"
+          fi
