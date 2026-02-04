@@ -47,20 +47,17 @@ jobs:
       - name: Scan production code with DepGuard
         id: depguard-scan
         run: |
-          # Create a temporary package.json for scanning only production code
-          cat > /tmp/scan-config.json << 'EOFCONFIG'
-          {
-            "name": "depguard-production-scan",
-            "version": "1.0.0",
-            "dependencies": $(jq '.dependencies' package.json)
-          }
-          EOFCONFIG
+          # Temporarily move examples to exclude from scan
+          mv examples /tmp/examples-backup || true
 
-          # Scan only the root package.json (production dependencies)
-          echo "::group::DepGuard Production Scan"
+          # Scan only production code (no examples/)
+          echo "::group::DepGuard Production Scan (Excluding examples/)"
           node bin/depguard.js scan -p . -o json -f depguard-production.json
           node bin/depguard.js scan -p .
           echo "::endgroup::"
+
+          # Restore examples
+          mv /tmp/examples-backup examples || true
 
       - name: Analyze scan results
         id: analyze
@@ -77,32 +74,32 @@ jobs:
           CRITICAL=$(jq -r '.statistics.critical // 0' depguard-production.json)
           HIGH=$(jq -r '.statistics.high // 0' depguard-production.json)
           MEDIUM=$(jq -r '.statistics.medium // 0' depguard-production.json)
+          RESULT_COUNT=$(jq '.results | length' depguard-production.json)
 
           echo "total_vulns=$TOTAL_VULNS" >> $GITHUB_OUTPUT
           echo "reachable_vulns=$REACHABLE_VULNS" >> $GITHUB_OUTPUT
           echo "critical=$CRITICAL" >> $GITHUB_OUTPUT
           echo "high=$HIGH" >> $GITHUB_OUTPUT
           echo "medium=$MEDIUM" >> $GITHUB_OUTPUT
+          echo "result_count=$RESULT_COUNT" >> $GITHUB_OUTPUT
 
           # Create summary
           echo "## DepGuard Production Code Scan Results" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
+          echo "_Scanned production code only (examples/ excluded)_" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
           echo "| Metric | Count |" >> $GITHUB_STEP_SUMMARY
           echo "|--------|-------|" >> $GITHUB_STEP_SUMMARY
-          echo "| Total Vulnerabilities | $TOTAL_VULNS |" >> $GITHUB_STEP_SUMMARY
-          echo "| Reachable Vulnerabilities | $REACHABLE_VULNS |" >> $GITHUB_STEP_SUMMARY
+          echo "| Total Vulnerabilities Found | $TOTAL_VULNS |" >> $GITHUB_STEP_SUMMARY
+          echo "| Reachable Vulnerabilities | $RESULT_COUNT |" >> $GITHUB_STEP_SUMMARY
           echo "| Critical Severity | $CRITICAL |" >> $GITHUB_STEP_SUMMARY
           echo "| High Severity | $HIGH |" >> $GITHUB_STEP_SUMMARY
           echo "| Medium Severity | $MEDIUM |" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
 
-          # Filter for production code only (exclude examples/)
-          PROD_VULNS=$(jq '[.results[] | select(.vulnerability.package | startswith("examples/") | not)] | length' depguard-production.json)
-          echo "production_vulns=$PROD_VULNS" >> $GITHUB_OUTPUT
-
-          if [ "$PROD_VULNS" -gt 0 ]; then
-            echo "::warning::Found $PROD_VULNS reachable vulnerabilities in production code"
-            echo "❌ **Status:** $PROD_VULNS reachable vulnerabilities found in production code" >> $GITHUB_STEP_SUMMARY
+          if [ "$RESULT_COUNT" -gt 0 ]; then
+            echo "::warning::Found $RESULT_COUNT reachable vulnerabilities in production code"
+            echo "❌ **Status:** $RESULT_COUNT reachable vulnerabilities found in production code" >> $GITHUB_STEP_SUMMARY
           else
             echo "::notice::Production code is secure - 0 reachable vulnerabilities ✓"
             echo "✅ **Status:** Production code is secure (0 reachable vulnerabilities)" >> $GITHUB_STEP_SUMMARY
@@ -125,14 +122,18 @@ jobs:
             const report = JSON.parse(fs.readFileSync('depguard-production.json', 'utf8'));
 
             const totalVulns = report.statistics?.totalVulnerabilities || 0;
-            const reachableVulns = report.statistics?.reachableVulnerabilities || 0;
+            const resultCount = report.results?.length || 0;
+            const critical = report.statistics?.critical || 0;
+            const high = report.statistics?.high || 0;
+            const medium = report.statistics?.medium || 0;
 
             const comment = `## 🛡️ DepGuard Security Scan Results
 
-            **Production Code Analysis:**
+            **Production Code Analysis (examples/ excluded):**
             - Total vulnerabilities found: ${totalVulns}
-            - Reachable vulnerabilities: ${reachableVulns}
-            - Status: ${reachableVulns === 0 ? '✅ Secure' : '⚠️ Needs attention'}
+            - Reachable vulnerabilities: ${resultCount}
+            - Critical: ${critical} | High: ${high} | Medium: ${medium}
+            - Status: ${resultCount === 0 ? '✅ Secure' : '⚠️ Needs attention'}
 
             📊 [View detailed report in artifacts](https://github.com/${{github.repository}}/actions/runs/${{github.run_id}})
             `;
