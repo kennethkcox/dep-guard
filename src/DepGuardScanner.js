@@ -22,19 +22,46 @@ const PythonAnalyzer = require('./analyzers/PythonAnalyzer');
 const JavaAnalyzer = require('./analyzers/JavaAnalyzer');
 const Reporter = require('./reporting/Reporter');
 const DependencyResolver = require('./utils/DependencyResolver');
+const DataFlowAnalyzer = require('./analysis/DataFlowAnalyzer');
+const MLManager = require('./ml/MLManager');
 const { getLogger } = require('./utils/logger');
 const { ManifestParsingError, FileSystemError } = require('./utils/errors');
 const Validator = require('./utils/validator');
 
+// Configuration constants
+const CONFIG = {
+    MAX_FILE_SIZE: 50 * 1024 * 1024,  // 50MB max file size
+    MAX_JSON_SIZE: 10 * 1024 * 1024,  // 10MB max JSON size
+    MAX_DEPENDENCIES: 10000,          // Max dependencies per manifest
+    MAX_DEPTH_DEFAULT: 10,            // Default call graph depth
+    MIN_CONFIDENCE_DEFAULT: 0.5,      // Default minimum confidence score
+    MAX_TRAVERSAL_DEPTH: 100          // Maximum graph traversal depth (anti-infinite-loop)
+};
+
 class DepGuardScanner2 {
     constructor(options = {}) {
+        // Validate options before processing
+        Validator.validateOptions(options, {
+            projectPath: { type: 'string', mustExist: false },
+            maxDepth: { type: 'number', min: 1, max: 100, integer: true },
+            minConfidence: { type: 'number', min: 0, max: 1 },
+            entryPointConfidence: { type: 'number', min: 0, max: 1 },
+            deepAnalysis: { type: 'boolean' },
+            verbose: { type: 'boolean' },
+            enableDataFlow: { type: 'boolean' },
+            enableML: { type: 'boolean' },
+            resolveTransitive: { type: 'boolean' }
+        });
+
         this.options = {
             projectPath: options.projectPath || process.cwd(),
-            maxDepth: options.maxDepth || 10,
-            minConfidence: options.minConfidence || 0.5,
+            maxDepth: options.maxDepth || CONFIG.MAX_DEPTH_DEFAULT,
+            minConfidence: options.minConfidence || CONFIG.MIN_CONFIDENCE_DEFAULT,
             entryPointConfidence: options.entryPointConfidence || 0.6,
             deepAnalysis: options.deepAnalysis || false,
             verbose: options.verbose || false,
+            enableDataFlow: options.enableDataFlow !== false,  // Enabled by default
+            enableML: options.enableML !== false,              // Enabled by default
             ...options
         };
 
@@ -57,10 +84,24 @@ class DepGuardScanner2 {
             verbose: this.options.verbose
         });
 
+        // Data Flow Analyzer (NEW)
+        this.dataFlowAnalyzer = null;
+        if (this.options.enableDataFlow) {
+            this.dataFlowAnalyzer = new DataFlowAnalyzer(this.options);
+        }
+
+        // ML Manager (NEW)
+        this.mlManager = null;
+        if (this.options.enableML) {
+            this.mlManager = new MLManager(this.options);
+        }
+
         this.vulnDatabases = new Map();  // One database per ecosystem
         this.results = [];
         this.manifests = [];
         this.allDependencies = [];
+        this.failedManifests = [];  // Track manifests that failed to parse
+        this.transitiveCache = new Map();  // Cache for transitive dependency resolution
         this.dependencyResolver = new DependencyResolver(this.options);
     }
 
@@ -96,6 +137,16 @@ class DepGuardScanner2 {
             console.log('\n🔬 Phase 6: Performing reachability analysis...');
             await this.performReachabilityAnalysis();
 
+            // Phase 6.5: Data Flow Analysis (NEW)
+            if (this.options.enableDataFlow) {
+                await this.performDataFlowAnalysis();
+            }
+
+            // Phase 6.8: ML Risk Prediction (NEW)
+            if (this.options.enableML) {
+                await this.performMLAnalysis();
+            }
+
             // Phase 7: Results
             console.log('\n✅ Phase 7: Generating results...');
             this.generateResults();
@@ -113,10 +164,13 @@ class DepGuardScanner2 {
             if (this.options.verbose) {
                 console.error(error.stack);
             }
+            // Clean up on error
+            this.cleanup();
             return {
                 success: false,
                 error: error.message,
-                results: []
+                results: [],
+                failedManifests: this.failedManifests
             };
         }
     }
@@ -181,7 +235,18 @@ class DepGuardScanner2 {
             } catch (error) {
                 this.logger.warn('Error parsing manifest', {
                     manifest: manifest.filename,
-                    error: error.message
+                    error: error.message,
+                    stack: error.stack
+                });
+
+                // Track failed manifest for reporting
+                this.failedManifests.push({
+                    manifest,
+                    error: {
+                        message: error.message,
+                        type: error.constructor.name,
+                        stack: this.options.verbose ? error.stack : undefined
+                    }
                 });
 
                 // Re-throw critical errors, allow scanner to continue for non-critical
@@ -203,29 +268,50 @@ class DepGuardScanner2 {
     }
 
     /**
-     * Resolves transitive dependencies for a manifest
+     * Resolves transitive dependencies for a manifest with caching
      */
     async resolveTransitiveDependencies(manifest) {
+        // Create cache key from manifest path and ecosystem
+        const cacheKey = `${manifest.ecosystem}:${manifest.path}`;
+
+        // Check cache first
+        if (this.transitiveCache.has(cacheKey)) {
+            this.logger.debug('Using cached transitive dependencies', { manifest: manifest.filename });
+            return this.transitiveCache.get(cacheKey);
+        }
+
         try {
+            let result = [];
+
             switch (manifest.ecosystem) {
                 case 'maven':
-                    return this.dependencyResolver.resolveMavenDependencies(manifest.path);
+                    result = await this.dependencyResolver.resolveMavenDependencies(manifest.path);
+                    break;
 
                 case 'npm':
-                    return this.dependencyResolver.resolveNpmDependencies(manifest.path);
+                    result = await this.dependencyResolver.resolveNpmDependencies(manifest.path);
+                    break;
 
                 case 'pypi':
-                    return this.dependencyResolver.resolvePythonDependencies(manifest.path);
+                    result = await this.dependencyResolver.resolvePythonDependencies(manifest.path);
+                    break;
 
                 default:
                     // No transitive resolution for other ecosystems yet
-                    return [];
+                    result = [];
             }
+
+            // Cache the result
+            this.transitiveCache.set(cacheKey, result);
+            return result;
+
         } catch (error) {
             this.logger.warn('Failed to resolve transitive dependencies', {
                 manifest: manifest.filename,
                 error: error.message
             });
+            // Cache empty result to avoid repeated failures
+            this.transitiveCache.set(cacheKey, []);
             return [];
         }
     }
@@ -261,7 +347,7 @@ class DepGuardScanner2 {
 
         try {
             // Validate file size before reading
-            Validator.validateFileSize(manifest.path, 50 * 1024 * 1024); // Max 50MB
+            Validator.validateFileSize(manifest.path, CONFIG.MAX_FILE_SIZE);
             content = fs.readFileSync(manifest.path, 'utf8');
         } catch (error) {
             throw new FileSystemError(
@@ -295,6 +381,9 @@ class DepGuardScanner2 {
 
             case 'nuget':
                 return this.extractNuGetDependencies(content, manifest);
+
+            case 'pub':
+                return this.extractPubDependencies(content, manifest);
 
             default:
                 console.warn(`  ⚠️  Unsupported ecosystem: ${manifest.ecosystem}`);
@@ -522,14 +611,18 @@ class DepGuardScanner2 {
                 const depCount = Object.keys(deps).length;
                 Validator.validateDependencyCount(depCount);
 
-                return Object.entries(deps)
-                    .filter(([name]) => name !== 'php')  // Skip PHP itself
-                    .map(([name, version]) => ({
-                        name,
-                        version: version.replace(/[\^~]/g, ''),
-                        ecosystem: 'packagist',
-                        manifest: manifest.path
-                    }));
+                // Optimized: single pass instead of filter + map
+                return Object.entries(deps).reduce((acc, [name, version]) => {
+                    if (name !== 'php') {  // Skip PHP itself
+                        acc.push({
+                            name,
+                            version: version.replace(/[\^~]/g, ''),
+                            ecosystem: 'packagist',
+                            manifest: manifest.path
+                        });
+                    }
+                    return acc;
+                }, []);
             }
             return [];
         } catch (error) {
@@ -826,6 +919,82 @@ class DepGuardScanner2 {
     }
 
     /**
+     * Phase 6.5: Data Flow Analysis (NEW)
+     */
+    async performDataFlowAnalysis() {
+        if (!this.dataFlowAnalyzer || this.results.length === 0) {
+            return;
+        }
+
+        console.log('\n🌊 Phase 6.5: Performing data flow analysis...');
+
+        // Set call graph
+        this.dataFlowAnalyzer.setCallGraph(this.reachabilityAnalyzer.getCallGraph());
+
+        // Get entry points
+        const entryPoints = Array.from(this.reachabilityAnalyzer.entryPoints);
+
+        // Analyze each result
+        let taintedCount = 0;
+        for (const result of this.results) {
+            try {
+                const flowResult = this.dataFlowAnalyzer.analyzeFlow(result, entryPoints);
+
+                // Enrich result with data flow info
+                result.dataFlow = flowResult;
+
+                // Merge confidence scores
+                if (flowResult.isTainted && flowResult.confidence > 0.60) {
+                    result.enhancedConfidence = Math.min(
+                        0.98,
+                        result.confidence + (flowResult.confidence * 0.3)
+                    );
+                } else {
+                    result.enhancedConfidence = result.confidence;
+                }
+
+                if (flowResult.isTainted) {
+                    taintedCount++;
+                }
+            } catch (error) {
+                this.logger.warn('Data flow analysis failed for finding', {
+                    vulnerability: result.vulnerability?.id,
+                    error: error.message
+                });
+            }
+        }
+
+        console.log(`  ✓ Found ${taintedCount} vulnerabilities with user input taint paths`);
+    }
+
+    /**
+     * Phase 6.8: ML Risk Prediction (NEW)
+     */
+    async performMLAnalysis() {
+        if (!this.mlManager || this.results.length === 0) {
+            return;
+        }
+
+        console.log('\n🤖 Phase 6.8: Applying ML risk prediction...');
+
+        try {
+            // Enrich all results with ML predictions
+            this.results = this.mlManager.enrichFindings(this.results);
+
+            const modelInfo = this.mlManager.getModelInfo();
+
+            if (modelInfo.status === 'trained') {
+                console.log(`  ✓ Using trained model (accuracy: ${(modelInfo.accuracy * 100).toFixed(1)}%, ${modelInfo.samples} samples)`);
+            } else {
+                console.log(`  ✓ Using default risk scoring (collect feedback to train custom model)`);
+            }
+        } catch (error) {
+            this.logger.error('ML analysis failed', { error: error.message });
+            console.log(`  ⚠️  ML analysis failed: ${error.message}`);
+        }
+    }
+
+    /**
      * Phase 7: Generate results
      */
     generateResults() {
@@ -834,8 +1003,13 @@ class DepGuardScanner2 {
             r.confidence >= this.options.minConfidence
         );
 
-        // Sort by confidence (highest first)
-        filtered.sort((a, b) => b.confidence - a.confidence);
+        // Sort by ML risk score if available, otherwise by confidence
+        filtered.sort((a, b) => {
+            if (a.mlPrediction && b.mlPrediction) {
+                return b.mlPrediction.riskScore - a.mlPrediction.riskScore;
+            }
+            return b.confidence - a.confidence;
+        });
 
         this.results = filtered;
 
@@ -880,6 +1054,39 @@ class DepGuardScanner2 {
     async generateReport(format = 'table', outputPath = null) {
         const reporter = new Reporter({ format, outputPath });
         return reporter.generate(this.results, this.getStatistics());
+    }
+
+    /**
+     * Cleanup resources and reset state
+     * Call this on errors or when scanner is no longer needed
+     */
+    cleanup() {
+        if (this.reachabilityAnalyzer) {
+            this.reachabilityAnalyzer.clear();
+        }
+
+        if (this.vulnDatabases) {
+            this.vulnDatabases.clear();
+        }
+
+        if (this.transitiveCache) {
+            this.transitiveCache.clear();
+        }
+
+        this.results = [];
+        this.manifests = [];
+        this.allDependencies = [];
+        this.failedManifests = [];
+
+        this.logger.debug('Scanner cleanup completed');
+    }
+
+    /**
+     * Dispose of scanner and free resources
+     * Alias for cleanup()
+     */
+    dispose() {
+        this.cleanup();
     }
 }
 

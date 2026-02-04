@@ -208,13 +208,27 @@ class ReachabilityAnalyzer {
 
   /**
    * Traverses call graph to find all reachable files
+   * @param {string} startNode - Starting node for traversal
+   * @param {number} maxDepth - Maximum traversal depth to prevent infinite loops
    */
-  traverseCallGraphForFiles(startNode) {
+  traverseCallGraphForFiles(startNode, maxDepth = 100) {
     const visited = new Set();
-    const queue = [startNode];
+    const queue = [{ node: startNode, depth: 0 }];
 
     while (queue.length > 0) {
-      const node = queue.shift();
+      const { node, depth } = queue.shift();
+
+      // Prevent infinite loops and excessive memory usage
+      if (depth > maxDepth) {
+        const logger = require('../utils/logger').getLogger();
+        logger.warn('Maximum traversal depth reached', {
+          startNode,
+          currentNode: node,
+          depth
+        });
+        continue;
+      }
+
       if (visited.has(node)) continue;
       visited.add(node);
 
@@ -222,11 +236,11 @@ class ReachabilityAnalyzer {
       const filePath = node.split(':')[0];
       this.reachableFiles.add(filePath);
 
-      // Add connected nodes
+      // Add connected nodes with depth tracking
       const targets = this.callGraph.get(node) || [];
       for (const { target } of targets) {
         if (!visited.has(target)) {
-          queue.push(target);
+          queue.push({ node: target, depth: depth + 1 });
         }
       }
     }

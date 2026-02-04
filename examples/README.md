@@ -1,13 +1,99 @@
 # DepGuard Examples
 
-This directory contains example projects to demonstrate DepGuard's capabilities across multiple ecosystems.
+This directory contains examples and demos for DepGuard v2.0, showcasing advanced features including **Data Flow Analysis** and **Machine Learning Risk Prediction**.
 
-## Available Examples
+## 📂 Contents
 
-| Example | Ecosystem | Language | Vulnerabilities |
-|---------|-----------|----------|-----------------|
-| [vulnerable-app](./vulnerable-app) | npm | JavaScript | 4 CVEs |
-| [vulnerable-dotnet-app](./vulnerable-dotnet-app) | NuGet | C# | 8 CVEs |
+### 🎯 Interactive Demo (NEW!)
+**Files:**
+- `DEMO.md` - Complete walkthrough guide with data flow & ML features
+- `run-demo.sh` - Automated demo script (Linux/Mac)
+- `run-demo.bat` - Automated demo script (Windows)
+
+The interactive demo walks you through:
+1. Initial scan with data flow and ML analysis
+2. Providing feedback on vulnerabilities
+3. Training a personalized ML model
+4. Re-scanning with trained model
+5. Exporting feedback data
+
+### 📦 Example Projects
+
+| Example | Ecosystem | Language | Vulnerabilities | Features |
+|---------|-----------|----------|-----------------|----------|
+| [vulnerable-test-app](./vulnerable-test-app) | npm | JavaScript | 10 CVEs | Hard-to-detect patterns, data flow testing |
+| [vulnerable-app](./vulnerable-app) | npm | JavaScript | 4 CVEs | Basic reachability examples |
+| [vulnerable-dotnet-app](./vulnerable-dotnet-app) | NuGet | C# | 8 CVEs | Multi-ecosystem support |
+
+---
+
+## 🚀 Quick Start
+
+### Option 1: Run the Interactive Demo (Recommended)
+
+**Linux/Mac:**
+```bash
+cd examples
+chmod +x run-demo.sh
+./run-demo.sh
+```
+
+**Windows:**
+```cmd
+cd examples
+run-demo.bat
+```
+
+The demo script will guide you through all features step by step.
+
+### Option 2: Manual Exploration
+
+Follow the detailed guide in `DEMO.md` or read it online.
+
+---
+
+## 📊 What's New in v2.0
+
+### Data Flow Analysis
+Track user input from sources to vulnerabilities:
+```
+🌊 Data Flow: TAINTED (95%)
+   User input reaches this vulnerability!
+   Sources: req.body (HTTP Request Body)
+   Sanitizers: None detected
+```
+
+### Machine Learning Risk Prediction
+Personalized risk scoring based on your feedback:
+```
+🎯 ML Risk Score: 92/100 (CRITICAL) [ML Model: trained ✓]
+
+💡 Top Risk Factors:
+   1. Known Exploitation (KEV) (+35 points)
+   2. User Input Reaches Vulnerability (+20 points)
+   3. Exploit Probability (EPSS: 0.92) (+23 points)
+```
+
+### Multi-Source Threat Intelligence
+- OSV, NVD, GitHub Advisory databases
+- EPSS (Exploit Prediction Scoring)
+- CISA KEV (Known Exploited Vulnerabilities)
+
+---
+
+## 🧪 Vulnerable Test Application
+
+The `vulnerable-test-app` directory contains:
+- 10 vulnerable dependencies with known CVEs
+- 10 hard-to-detect vulnerability patterns
+- Realistic code structures (deep call chains, dynamic requires)
+- Comprehensive documentation
+
+**Scan it:**
+```bash
+cd examples/vulnerable-test-app
+depguard scan --deep-analysis -v
+```
 
 ---
 

@@ -74,6 +74,15 @@ class Reporter {
     output.push(chalk.bold(`║ Total Dependencies: ${String(stats.totalDependencies).padEnd(42)}║`));
     output.push(chalk.bold(`║ Vulnerabilities Found: ${String(stats.totalVulnerabilities).padEnd(38)}║`));
     output.push(chalk.bold(`║ Reachable Vulnerabilities: ${String(stats.reachableVulnerabilities).padEnd(34)}║`));
+    if (calculatedStats.taintedVulnerabilities > 0) {
+      output.push(chalk.red(`║ 🌊 Tainted (User Input): ${String(calculatedStats.taintedVulnerabilities).padEnd(33)}║`));
+    }
+    if (calculatedStats.mlPredicted > 0) {
+      output.push(chalk.cyan(`║ 🤖 ML Risk Assessed: ${String(calculatedStats.mlPredicted).padEnd(37)}║`));
+      if (calculatedStats.mlCritical > 0 || calculatedStats.mlHigh > 0) {
+        output.push(chalk.red(`║    ML Critical/High: ${String(calculatedStats.mlCritical + calculatedStats.mlHigh).padEnd(37)}║`));
+      }
+    }
     output.push(chalk.bold(`║ Critical: ${String(calculatedStats.critical).padEnd(51)}║`));
     output.push(chalk.bold(`║ High: ${String(calculatedStats.high).padEnd(55)}║`));
     output.push(chalk.bold(`║ Medium: ${String(calculatedStats.medium).padEnd(53)}║`));
@@ -119,6 +128,17 @@ class Reporter {
 
     let output = [];
 
+    // ML Risk Score (NEW - show first if available)
+    if (result.mlPrediction) {
+      const score = result.mlPrediction.riskScore;
+      const level = result.mlPrediction.riskLevel;
+      const scoreColor = score >= 80 ? chalk.red :
+                        score >= 60 ? chalk.yellow :
+                        score >= 40 ? chalk.blue : chalk.gray;
+
+      output.push(chalk.bold(`\n🎯 ML Risk Score: ${scoreColor(`${score}/100 (${level})`)}`));
+    }
+
     // Severity indicator
     const severityColor = this.getSeverityColor(vuln.severity);
     const severityIcon = this.getSeverityIcon(vuln.severity);
@@ -132,15 +152,50 @@ class Reporter {
       ? ` (${Math.round(reach.confidence * 100)}% confidence)`
       : '';
 
-    output.push(`\n${chalk.bold(`[${vuln.severity}]`)} ${severityIcon} ${reachableIcon}${confidence}`);
+    output.push(`${chalk.bold(`[${vuln.severity}]`)} ${severityIcon} ${reachableIcon}${confidence}`);
     output.push(chalk.bold(`Package: ${result.package}`));
     output.push(chalk.bold(`Vulnerability: ${vuln.id}`));
     output.push(`CVSS: ${vuln.cvss} (${vuln.severity})`);
     output.push(`Description: ${vuln.title}`);
 
+    // Data Flow Analysis (NEW)
+    if (result.dataFlow) {
+      const df = result.dataFlow;
+      if (df.isTainted) {
+        output.push(chalk.red(`\n🌊 Data Flow: TAINTED (${Math.round(df.confidence * 100)}% confidence)`));
+        output.push(chalk.red(`   User input reaches this vulnerability!`));
+
+        if (df.sources && df.sources.length > 0) {
+          output.push(chalk.dim(`   Sources: ${df.sources.map(s => s.source).join(', ')}`));
+        }
+
+        if (df.sanitizers && df.sanitizers.length > 0) {
+          output.push(chalk.yellow(`   ⚠️  Sanitizers: ${df.sanitizers.join(', ')} (may not be effective)`));
+        }
+
+        output.push(chalk.red(`   Risk: ${df.risk}`));
+      } else {
+        output.push(chalk.green(`\n🌊 Data Flow: Not tainted`));
+        output.push(chalk.dim(`   No user input detected reaching this vulnerability`));
+      }
+    }
+
+    // ML Explanation (NEW - show top factors)
+    if (result.mlPrediction && result.mlPrediction.explanation && this.options.verbosity !== 'quiet') {
+      const topFactors = result.mlPrediction.explanation.slice(0, 3);
+      if (topFactors.length > 0) {
+        output.push(chalk.cyan('\n💡 Top Risk Factors:'));
+        topFactors.forEach((factor, idx) => {
+          const sign = factor.impact === 'increases' ? '+' : '-';
+          const color = factor.impact === 'increases' ? chalk.red : chalk.green;
+          output.push(color(`   ${idx + 1}. ${factor.feature} (${sign}${Math.abs(parseFloat(factor.contribution) * 100).toFixed(0)} points)`));
+        });
+      }
+    }
+
     // Vulnerable function location
     if (result.functionName) {
-      output.push(chalk.dim(`Location: ${result.modulePath}::${result.functionName}`));
+      output.push(chalk.dim(`\nLocation: ${result.modulePath}::${result.functionName}`));
     }
 
     // Reachability path
@@ -162,6 +217,12 @@ class Reporter {
     // Fix recommendation
     if (vuln.fixedVersion) {
       output.push(chalk.green(`\nRecommendation: Update to ${result.package}@${vuln.fixedVersion} or higher`));
+    } else if (result.mlPrediction) {
+      const rec = result.mlPrediction.recommendation;
+      if (rec) {
+        output.push(chalk.yellow(`\nRecommendation: ${rec.action}`));
+        output.push(chalk.dim(`Timeline: ${rec.timeline}`));
+      }
     }
 
     // References
@@ -411,6 +472,10 @@ class Reporter {
       totalDependencies: new Set(results.map(r => r.package)).size,
       totalVulnerabilities: results.length,
       reachableVulnerabilities: results.filter(r => r.reachability && r.reachability.isReachable).length,
+      taintedVulnerabilities: results.filter(r => r.dataFlow && r.dataFlow.isTainted).length,
+      mlPredicted: results.filter(r => r.mlPrediction).length,
+      mlCritical: results.filter(r => r.mlPrediction && r.mlPrediction.riskLevel === 'CRITICAL').length,
+      mlHigh: results.filter(r => r.mlPrediction && r.mlPrediction.riskLevel === 'HIGH').length,
       critical: results.filter(r => r.vulnerability.severity === 'CRITICAL').length,
       high: results.filter(r => r.vulnerability.severity === 'HIGH').length,
       medium: results.filter(r => r.vulnerability.severity === 'MEDIUM').length,

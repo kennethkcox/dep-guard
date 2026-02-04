@@ -235,6 +235,95 @@ class Validator {
       throw new ValidationError('Invalid URL format', 'url', url);
     }
   }
+
+  /**
+   * Validates scanner options object
+   * @param {Object} options - Options to validate
+   * @param {Object} schema - Validation schema
+   */
+  static validateOptions(options, schema = {}) {
+    const validated = {};
+
+    for (const [key, rules] of Object.entries(schema)) {
+      const value = options[key];
+
+      // Skip if undefined and optional
+      if (value === undefined && !rules.required) {
+        continue;
+      }
+
+      // Check required
+      if (rules.required && value === undefined) {
+        throw new ValidationError(`Option '${key}' is required`, key, value);
+      }
+
+      // Type checking
+      if (rules.type && value !== undefined) {
+        const actualType = typeof value;
+        if (actualType !== rules.type) {
+          throw new ValidationError(
+            `Option '${key}' must be of type ${rules.type}`,
+            key,
+            value,
+            { expectedType: rules.type, actualType }
+          );
+        }
+      }
+
+      // Number validation
+      if (rules.type === 'number' && value !== undefined) {
+        if (rules.min !== undefined && value < rules.min) {
+          throw new ValidationError(
+            `Option '${key}' must be at least ${rules.min}`,
+            key,
+            value,
+            { min: rules.min }
+          );
+        }
+        if (rules.max !== undefined && value > rules.max) {
+          throw new ValidationError(
+            `Option '${key}' must be at most ${rules.max}`,
+            key,
+            value,
+            { max: rules.max }
+          );
+        }
+        if (rules.integer && !Number.isInteger(value)) {
+          throw new ValidationError(`Option '${key}' must be an integer`, key, value);
+        }
+      }
+
+      // String validation
+      if (rules.type === 'string' && value !== undefined) {
+        if (rules.minLength !== undefined && value.length < rules.minLength) {
+          throw new ValidationError(
+            `Option '${key}' must be at least ${rules.minLength} characters`,
+            key,
+            value
+          );
+        }
+        if (rules.enum && !rules.enum.includes(value)) {
+          throw new ValidationError(
+            `Option '${key}' must be one of: ${rules.enum.join(', ')}`,
+            key,
+            value,
+            { validValues: rules.enum }
+          );
+        }
+      }
+
+      // Path validation
+      if (rules.mustExist && value !== undefined) {
+        if (!fs.existsSync(value)) {
+          throw new ValidationError(`Path '${value}' does not exist`, key, value);
+        }
+      }
+
+      validated[key] = value;
+    }
+
+    return validated;
+  }
 }
 
 module.exports = Validator;

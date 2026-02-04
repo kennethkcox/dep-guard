@@ -182,6 +182,7 @@ class JavaScriptAnalyzer {
 
   /**
    * Tracks a method call (obj.method())
+   * ENHANCED: Now tracks full method paths like lodash.template, _.merge, etc.
    */
   trackMethodCall(nodePath, imports, filePath) {
     const obj = nodePath.node.object;
@@ -196,6 +197,20 @@ class JavaScriptAnalyzer {
         const importInfo = imports.get(objName);
         const targetModule = this.resolveModule(importInfo.module, filePath);
 
+        // IMPROVEMENT: Track both the generic import and specific method
+        // This helps match against OSV's "affected functions" data
+
+        // Add call to specific method (e.g., "lodash.template")
+        const specificTarget = `${importInfo.module}.${methodName}`;
+        this.reachabilityAnalyzer.addCall(
+          filePath,
+          this.currentFunction || 'module',
+          targetModule,
+          specificTarget,  // e.g., "lodash.template" instead of just "template"
+          'direct-method'
+        );
+
+        // Also add generic package import for fallback
         this.reachabilityAnalyzer.addCall(
           filePath,
           this.currentFunction || 'module',

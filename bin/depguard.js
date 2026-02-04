@@ -33,6 +33,8 @@ program
   .option('-f, --file <filepath>', 'Save report to file')
   .option('--reachable-only', 'Show only reachable vulnerabilities', false)
   .option('--severity <level>', 'Filter by severity (critical, high, medium, low)')
+  .option('--disable-data-flow', 'Disable data flow analysis', false)
+  .option('--disable-ml', 'Disable ML risk prediction', false)
   .option('-v, --verbose', 'Verbose output', false)
   .action(async (options) => {
     try {
@@ -67,7 +69,9 @@ program
         minConfidence,
         deepAnalysis: options.deepAnalysis,
         entryPointConfidence: 0.6, // Default
-        verbose: options.verbose
+        verbose: options.verbose,
+        enableDataFlow: !options.disableDataFlow,
+        enableML: !options.disableMl
       });
 
       // Run scan
@@ -196,6 +200,254 @@ program
       console.log(chalk.green('✓ Cache cleared'));
     } else {
       console.log(chalk.yellow('No cache found'));
+    }
+  });
+
+// Feedback command (NEW)
+program
+  .command('feedback <cve-id>')
+  .description('Provide feedback on a vulnerability finding')
+  .requiredOption('--verdict <verdict>', 'Verdict: true-positive, false-positive, or unsure')
+  .option('--reason <reason>', 'Reason for verdict')
+  .option('--risk-override <risk>', 'Override risk level (critical, high, medium, low)')
+  .action((cveId, options) => {
+    try {
+      const MLManager = require('../src/ml/MLManager');
+      const mlManager = new MLManager();
+
+      // Validate verdict
+      if (!['true-positive', 'false-positive', 'unsure'].includes(options.verdict)) {
+        console.log(chalk.red('Error: Verdict must be true-positive, false-positive, or unsure'));
+        process.exit(1);
+      }
+
+      // For now, create a minimal finding object
+      // In a real scenario, this would load from scan results
+      const finding = {
+        vulnerability: {
+          id: cveId,
+          package: 'unknown', // Would come from scan results
+          version: 'unknown'
+        },
+        confidence: 0,
+        path: []
+      };
+
+      const feedback = {
+        verdict: options.verdict,
+        reason: options.reason || '',
+        riskOverride: options.riskOverride
+      };
+
+      mlManager.recordFeedback(finding, feedback);
+
+      console.log(chalk.green(`✓ Feedback recorded for ${cveId}`));
+      console.log(chalk.gray(`  Verdict: ${options.verdict}`));
+
+      if (options.reason) {
+        console.log(chalk.gray(`  Reason: ${options.reason}`));
+      }
+
+      // Check if we should train
+      const stats = mlManager.getFeedbackStats();
+      const threshold = 50;
+
+      if (stats.total >= threshold) {
+        console.log(chalk.yellow(`\n💡 You have ${stats.total} feedback entries. Run 'depguard ml train' to train a custom model!`));
+      } else {
+        console.log(chalk.gray(`\n  Total feedback: ${stats.total}/${threshold} (need ${threshold} for auto-training)`));
+      }
+    } catch (error) {
+      console.error(chalk.red(`Error: ${error.message}`));
+      process.exit(1);
+    }
+  });
+
+// ML command group (NEW)
+const mlCommand = program
+  .command('ml')
+  .description('Machine learning risk prediction commands');
+
+mlCommand
+  .command('status')
+  .description('Show ML model and feedback status')
+  .action(() => {
+    try {
+      const MLManager = require('../src/ml/MLManager');
+      const mlManager = new MLManager();
+
+      const status = mlManager.getStatus();
+
+      console.log(chalk.bold.cyan('\n📊 ML Status\n'));
+
+      // Feedback stats
+      console.log(chalk.bold('Feedback:'));
+      console.log(`  Total: ${status.feedback.total}`);
+      console.log(`  True Positives: ${status.feedback.truePositives}`);
+      console.log(`  False Positives: ${status.feedback.falsePositives}`);
+      console.log(`  Unsure: ${status.feedback.unsure}`);
+
+      if (status.feedback.withDataFlow > 0) {
+        console.log(`  With Data Flow: ${status.feedback.withDataFlow}`);
+      }
+
+      // Model status
+      console.log(chalk.bold('\nModel:'));
+      if (status.model.status === 'trained') {
+        console.log(chalk.green(`  Status: Trained`));
+        console.log(`  Accuracy: ${(status.model.accuracy * 100).toFixed(1)}%`);
+        console.log(`  Training Samples: ${status.model.samples}`));
+        console.log(`  Trained At: ${status.model.trainedAt}`);
+      } else {
+        console.log(chalk.yellow(`  Status: Untrained (using defaults)`));
+        console.log(chalk.gray(`  Collect ${status.autoTrainThreshold} feedback entries to train`));
+      }
+
+      // Recommendations
+      console.log(chalk.bold('\nRecommendations:'));
+      if (status.readyForTraining && status.model.status === 'untrained') {
+        console.log(chalk.green(`  ✓ Ready to train! Run 'depguard ml train'`));
+      } else if (!status.readyForTraining) {
+        console.log(chalk.gray(`  Collect ${10 - status.feedback.total} more feedback entries to enable training`));
+      }
+
+      if (status.trainingRecommended && status.model.status === 'trained') {
+        const newSamples = status.feedback.total - status.model.samples;
+        console.log(chalk.yellow(`  💡 ${newSamples} new feedback entries. Consider retraining!`));
+      }
+    } catch (error) {
+      console.error(chalk.red(`Error: ${error.message}`));
+      process.exit(1);
+    }
+  });
+
+mlCommand
+  .command('train')
+  .description('Train ML model on collected feedback')
+  .action(() => {
+    try {
+      const MLManager = require('../src/ml/MLManager');
+      const mlManager = new MLManager();
+
+      console.log(chalk.cyan('🤖 Training ML model...\n'));
+
+      const result = mlManager.trainModel();
+
+      if (result.success) {
+        console.log(chalk.green(`✓ Model trained successfully!`));
+        console.log(`  Accuracy: ${(result.accuracy * 100).toFixed(1)}%`);
+        console.log(`  Training Samples: ${result.samples}`);
+        console.log(`  Trained At: ${result.trainedAt}`);
+        console.log(chalk.yellow(`\n💡 Future scans will use this personalized model!`));
+      } else {
+        console.log(chalk.red(`✗ Training failed: ${result.message}`));
+        if (result.currentCount) {
+          console.log(chalk.gray(`  Current feedback: ${result.currentCount}/10 required`));
+        }
+        process.exit(1);
+      }
+    } catch (error) {
+      console.error(chalk.red(`Error: ${error.message}`));
+      process.exit(1);
+    }
+  });
+
+mlCommand
+  .command('stats')
+  .description('Show detailed feedback statistics')
+  .action(() => {
+    try {
+      const MLManager = require('../src/ml/MLManager');
+      const mlManager = new MLManager();
+
+      const stats = mlManager.getFeedbackStats();
+
+      console.log(chalk.bold.cyan('\n📈 Feedback Statistics\n'));
+
+      console.log(chalk.bold('Overall:'));
+      console.log(`  Total: ${stats.total}`);
+      console.log(`  True Positives: ${stats.truePositives} (${(stats.truePositives/stats.total*100).toFixed(1)}%)`);
+      console.log(`  False Positives: ${stats.falsePositives} (${(stats.falsePositives/stats.total*100).toFixed(1)}%)`);
+      console.log(`  Unsure: ${stats.unsure} (${(stats.unsure/stats.total*100).toFixed(1)}%)`);
+
+      if (Object.keys(stats.byPackage).length > 0) {
+        console.log(chalk.bold('\nBy Package:'));
+        Object.entries(stats.byPackage)
+          .sort((a, b) => (b[1].tp + b[1].fp) - (a[1].tp + a[1].fp))
+          .slice(0, 10)
+          .forEach(([pkg, counts]) => {
+            const total = counts.tp + counts.fp + counts.unsure;
+            console.log(`  ${pkg}: ${total} (TP: ${counts.tp}, FP: ${counts.fp})`);
+          });
+      }
+    } catch (error) {
+      console.error(chalk.red(`Error: ${error.message}`));
+      process.exit(1);
+    }
+  });
+
+mlCommand
+  .command('export <file>')
+  .description('Export feedback to JSON file')
+  .action((file) => {
+    try {
+      const MLManager = require('../src/ml/MLManager');
+      const mlManager = new MLManager();
+
+      const outputPath = path.resolve(file);
+      const success = mlManager.exportFeedback(outputPath);
+
+      if (success) {
+        console.log(chalk.green(`✓ Feedback exported to ${outputPath}`));
+      } else {
+        console.log(chalk.red('✗ Export failed'));
+        process.exit(1);
+      }
+    } catch (error) {
+      console.error(chalk.red(`Error: ${error.message}`));
+      process.exit(1);
+    }
+  });
+
+mlCommand
+  .command('reset')
+  .description('Reset ML model to defaults')
+  .action(() => {
+    try {
+      const MLManager = require('../src/ml/MLManager');
+      const mlManager = new MLManager();
+
+      mlManager.resetModel();
+
+      console.log(chalk.green('✓ ML model reset to defaults'));
+      console.log(chalk.gray('  Feedback data preserved. Model will use default weights until retrained.'));
+    } catch (error) {
+      console.error(chalk.red(`Error: ${error.message}`));
+      process.exit(1);
+    }
+  });
+
+mlCommand
+  .command('clear')
+  .description('Clear all feedback data (use with caution!)')
+  .option('--confirm', 'Confirm deletion')
+  .action((options) => {
+    try {
+      if (!options.confirm) {
+        console.log(chalk.yellow('⚠️  This will delete ALL feedback data!'));
+        console.log(chalk.gray('  Run with --confirm to proceed'));
+        process.exit(1);
+      }
+
+      const MLManager = require('../src/ml/MLManager');
+      const mlManager = new MLManager();
+
+      mlManager.clearFeedback();
+
+      console.log(chalk.green('✓ All feedback data cleared'));
+    } catch (error) {
+      console.error(chalk.red(`Error: ${error.message}`));
+      process.exit(1);
     }
   });
 

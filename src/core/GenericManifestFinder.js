@@ -226,6 +226,22 @@ class GenericManifestFinder {
                 type: 'manifest',
                 confidence: 0.95,
                 validator: this.validatePackagesConfig.bind(this)
+            },
+
+            // Dart/Flutter ecosystem
+            {
+                filename: 'pubspec.yaml',
+                ecosystem: 'pub',
+                type: 'manifest',
+                confidence: 1.0,
+                validator: this.validatePubspec.bind(this)
+            },
+            {
+                filename: 'pubspec.lock',
+                ecosystem: 'pub',
+                type: 'lockfile',
+                confidence: 0.95,
+                validator: null
             }
         ];
     }
@@ -570,6 +586,21 @@ class GenericManifestFinder {
             // Must contain <package elements
             if (!content.includes('<package ') && !content.includes('<packages')) {
                 return { valid: false, message: 'Not a valid packages.config' };
+            }
+
+            return { valid: true };
+        } catch (error) {
+            return { valid: false, message: `Cannot read file: ${error.message}` };
+        }
+    }
+
+    validatePubspec(filePath) {
+        try {
+            const content = fs.readFileSync(filePath, 'utf8');
+
+            // Must contain dependencies section
+            if (!content.includes('dependencies:')) {
+                return { valid: false, message: 'No dependencies found' };
             }
 
             return { valid: true };

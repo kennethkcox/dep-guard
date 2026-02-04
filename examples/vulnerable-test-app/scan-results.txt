@@ -1,0 +1,1993 @@
+╔════════════════════════════════════════════════════════════════╗
+║                    DepGuard v2.0.0                            ║
+║     Advanced Dependency Vulnerability Scanner                 ║
+║              with Reachability Analysis                        ║
+╚════════════════════════════════════════════════════════════════╝
+
+🔍 DepGuard v2.0 - Generic Vulnerability Scanner
+
+============================================================
+
+📦 Phase 1: Discovering project structure...
+🔍 Searching for manifests in: C:\Users\cczin\appservice-scan\examples\vulnerable-test-app
+  ✓ Found: package-lock.json (npm)
+  ✓ Found: package.json (npm)
+
+📦 Found 2 manifest(s)
+  ✓ Found 2 manifest(s):
+    - npm: 2
+
+📋 Phase 2: Analyzing dependencies...
+[09:17:26] INFO  Resolving npm transitive dependencies {manifestPath="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app\\package-lock.json"}
+[09:17:26] INFO  Resolved npm dependencies {count=96 transitive=3}
+  ✓ package-lock.json: 0 direct, 96 transitive
+[09:17:26] INFO  Resolving npm transitive dependencies {manifestPath="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app\\package.json"}
+[09:17:26] INFO  Resolved npm dependencies {count=96 transitive=3}
+  ✓ package.json: 11 direct, 85 transitive
+  ✓ Total dependencies: 192 (11 direct, 181 transitive)
+
+🔎 Phase 3: Checking for vulnerabilities...
+[09:17:26] INFO  Loading vulnerabilities for 96 packages from OSV
+  Querying OSV for 96 packages in 5 batch(es)...
+[09:17:32] DEBUG Saved to cache {key="axios@0.21.1"}
+[09:17:32] DEBUG Saved to cache {key="axios@0.21.1"}
+[09:17:32] DEBUG Saved to cache {key="axios@0.21.1"}
+[09:17:32] DEBUG Saved to cache {key="body-parser@1.19.0"}
+[09:17:32] DEBUG Saved to cache {key="cookie@0.4.0"}
+[09:17:32] DEBUG Saved to cache {key="ejs@3.1.6"}
+[09:17:32] DEBUG Saved to cache {key="ejs@3.1.6"}
+[09:17:32] DEBUG Saved to cache {key="express@4.17.1"}
+[09:17:32] DEBUG Saved to cache {key="express@4.17.1"}
+[09:17:32] DEBUG Saved to cache {key="jsonwebtoken@8.5.1"}
+[09:17:32] DEBUG Saved to cache {key="jsonwebtoken@8.5.1"}
+[09:17:32] DEBUG Saved to cache {key="jsonwebtoken@8.5.1"}
+[09:17:32] DEBUG Saved to cache {key="jsonwebtoken@2.1.3"}
+[09:17:32] DEBUG Saved to cache {key="jsonwebtoken@2.1.3"}
+[09:17:32] DEBUG Saved to cache {key="jsonwebtoken@2.1.3"}
+[09:17:32] DEBUG Saved to cache {key="jsonwebtoken@2.1.3"}
+[09:17:32] DEBUG Saved to cache {key="jsonwebtoken@5.7.2"}
+[09:17:32] DEBUG Saved to cache {key="jsonwebtoken@5.7.2"}
+[09:17:32] DEBUG Saved to cache {key="jsonwebtoken@5.7.2"}
+[09:17:32] DEBUG Saved to cache {key="lodash@4.17.20"}
+[09:17:32] DEBUG Saved to cache {key="lodash@4.17.20"}
+[09:17:32] DEBUG Saved to cache {key="lodash@4.17.20"}
+[09:17:32] DEBUG Saved to cache {key="minimist@1.2.5"}
+[09:17:32] DEBUG Saved to cache {key="path-to-regexp@0.1.7"}
+[09:17:32] DEBUG Saved to cache {key="path-to-regexp@0.1.7"}
+[09:17:32] DEBUG Saved to cache {key="qs@6.7.0"}
+[09:17:32] DEBUG Saved to cache {key="qs@6.7.0"}
+[09:17:32] DEBUG Saved to cache {key="semver@7.3.5"}
+[09:17:32] DEBUG Saved to cache {key="send@0.17.1"}
+[09:17:32] DEBUG Saved to cache {key="serve-static@1.14.1"}
+[09:17:32] DEBUG Saved to cache {key="validator@13.5.2"}
+[09:17:32] DEBUG Saved to cache {key="validator@13.5.2"}
+[09:17:32] DEBUG Saved to cache {key="validator@13.5.2"}
+[09:17:32] DEBUG Saved to cache {key="validator@13.5.2"}
+[09:17:32] DEBUG Saved to cache {key="xml2js@0.4.23"}
+[09:17:32] INFO  Found vulnerabilities in 17 packages
+[09:17:32] INFO  Loading vulnerabilities for 96 packages from OSV
+  Querying OSV for 96 packages in 5 batch(es)...
+[09:17:38] DEBUG Saved to cache {key="express@4.17.1"}
+[09:17:38] DEBUG Saved to cache {key="express@4.17.1"}
+[09:17:38] DEBUG Saved to cache {key="lodash@4.17.20"}
+[09:17:38] DEBUG Saved to cache {key="lodash@4.17.20"}
+[09:17:38] DEBUG Saved to cache {key="lodash@4.17.20"}
+[09:17:38] DEBUG Saved to cache {key="semver@7.3.5"}
+[09:17:38] DEBUG Saved to cache {key="minimist@1.2.5"}
+[09:17:38] DEBUG Saved to cache {key="axios@0.21.1"}
+[09:17:38] DEBUG Saved to cache {key="axios@0.21.1"}
+[09:17:38] DEBUG Saved to cache {key="axios@0.21.1"}
+[09:17:38] DEBUG Saved to cache {key="validator@13.5.2"}
+[09:17:38] DEBUG Saved to cache {key="validator@13.5.2"}
+[09:17:38] DEBUG Saved to cache {key="validator@13.5.2"}
+[09:17:38] DEBUG Saved to cache {key="validator@13.5.2"}
+[09:17:38] DEBUG Saved to cache {key="jsonwebtoken@8.5.1"}
+[09:17:38] DEBUG Saved to cache {key="jsonwebtoken@8.5.1"}
+[09:17:38] DEBUG Saved to cache {key="jsonwebtoken@8.5.1"}
+[09:17:38] DEBUG Saved to cache {key="ejs@3.1.6"}
+[09:17:38] DEBUG Saved to cache {key="ejs@3.1.6"}
+[09:17:38] DEBUG Saved to cache {key="xml2js@0.4.23"}
+[09:17:38] DEBUG Saved to cache {key="body-parser@1.19.0"}
+[09:17:38] DEBUG Saved to cache {key="cookie@0.4.0"}
+[09:17:38] DEBUG Saved to cache {key="jsonwebtoken@2.1.3"}
+[09:17:38] DEBUG Saved to cache {key="jsonwebtoken@2.1.3"}
+[09:17:38] DEBUG Saved to cache {key="jsonwebtoken@2.1.3"}
+[09:17:38] DEBUG Saved to cache {key="jsonwebtoken@2.1.3"}
+[09:17:38] DEBUG Saved to cache {key="jsonwebtoken@5.7.2"}
+[09:17:38] DEBUG Saved to cache {key="jsonwebtoken@5.7.2"}
+[09:17:38] DEBUG Saved to cache {key="jsonwebtoken@5.7.2"}
+[09:17:38] DEBUG Saved to cache {key="path-to-regexp@0.1.7"}
+[09:17:38] DEBUG Saved to cache {key="path-to-regexp@0.1.7"}
+[09:17:38] DEBUG Saved to cache {key="qs@6.7.0"}
+[09:17:38] DEBUG Saved to cache {key="qs@6.7.0"}
+[09:17:38] DEBUG Saved to cache {key="send@0.17.1"}
+[09:17:38] DEBUG Saved to cache {key="serve-static@1.14.1"}
+[09:17:38] INFO  Found vulnerabilities in 17 packages
+  ✓ Found 105 known vulnerabilities
+
+🕸️  Phase 4: Building call graph...
+Found 19 JavaScript files to analyze
+Analyzing file 1/19
+Analyzing file 11/19
+  ✓ Built call graph: 16 nodes, 48 edges
+
+🚪 Phase 5: Detecting entry points...
+
+🔍 Detecting entry points in 16 files...
+  ✓ Entry point: server.js (100%)
+    - HTTP_HANDLER: Express HTTP handler detected
+    - SERVER_INIT: Express/Node.js Server initialization detected
+  ✓ Entry point: template-processor.js (95%)
+    - HTTP_HANDLER: Echo HTTP handler detected
+
+Found 2 entry points
+
+  ✓ Detected 2 entry points
+
+🔬 Phase 6: Performing reachability analysis...
+[09:17:38] DEBUG Found vulnerabilities for dependency {package="axios" version="0.21.1" count=6}
+[09:17:38] DEBUG Found vulnerabilities for dependency {package="body-parser" version="1.19.0" count=2}
+[09:17:38] DEBUG Found vulnerabilities for dependency {package="cookie" version="0.4.0" count=2}
+[09:17:38] DEBUG Found vulnerabilities for dependency {package="ejs" version="3.1.6" count=4}
+[09:17:38] DEBUG Found vulnerabilities for dependency {package="express" version="4.17.1" count=4}
+[09:17:38] DEBUG Found vulnerabilities for dependency {package="jsonwebtoken" version="8.5.1" count=6}
+[09:17:38] DEBUG Found vulnerabilities for dependency {package="jsonwebtoken" version="2.1.3" count=8}
+[09:17:38] DEBUG Found vulnerabilities for dependency {package="jsonwebtoken" version="5.7.2" count=6}
+[09:17:38] DEBUG Found vulnerabilities for dependency {package="lodash" version="4.17.20" count=6}
+[09:17:38] DEBUG Found vulnerabilities for dependency {package="minimist" version="1.2.5" count=2}
+[09:17:38] DEBUG Found vulnerabilities for dependency {package="path-to-regexp" version="0.1.7" count=4}
+[09:17:38] DEBUG Found vulnerabilities for dependency {package="qs" version="6.7.0" count=4}
+[09:17:38] DEBUG Found vulnerabilities for dependency {package="semver" version="7.3.5" count=2}
+[09:17:38] DEBUG Found vulnerabilities for dependency {package="send" version="0.17.1" count=2}
+[09:17:38] DEBUG Found vulnerabilities for dependency {package="serve-static" version="1.14.1" count=2}
+[09:17:38] DEBUG Found vulnerabilities for dependency {package="validator" version="13.5.2" count=8}
+[09:17:38] DEBUG Found vulnerabilities for dependency {package="xml2js" version="0.4.23" count=2}
+[09:17:38] DEBUG Found vulnerabilities for dependency {package="express" version="4.17.1" count=4}
+[09:17:38] DEBUG Found vulnerabilities for dependency {package="lodash" version="4.17.20" count=6}
+[09:17:38] DEBUG Found vulnerabilities for dependency {package="semver" version="7.3.5" count=2}
+[09:17:38] DEBUG Found vulnerabilities for dependency {package="minimist" version="1.2.5" count=2}
+[09:17:38] DEBUG Found vulnerabilities for dependency {package="axios" version="0.21.1" count=6}
+[09:17:38] DEBUG Found vulnerabilities for dependency {package="validator" version="13.5.2" count=8}
+[09:17:38] DEBUG Found vulnerabilities for dependency {package="jsonwebtoken" version="8.5.1" count=6}
+[09:17:38] DEBUG Found vulnerabilities for dependency {package="ejs" version="3.1.6" count=4}
+[09:17:38] DEBUG Found vulnerabilities for dependency {package="xml2js" version="0.4.23" count=2}
+[09:17:38] DEBUG Found vulnerabilities for dependency {package="body-parser" version="1.19.0" count=2}
+[09:17:38] DEBUG Found vulnerabilities for dependency {package="cookie" version="0.4.0" count=2}
+[09:17:38] DEBUG Found vulnerabilities for dependency {package="jsonwebtoken" version="2.1.3" count=8}
+[09:17:38] DEBUG Found vulnerabilities for dependency {package="jsonwebtoken" version="5.7.2" count=6}
+[09:17:38] DEBUG Found vulnerabilities for dependency {package="path-to-regexp" version="0.1.7" count=4}
+[09:17:38] DEBUG Found vulnerabilities for dependency {package="qs" version="6.7.0" count=4}
+[09:17:38] DEBUG Found vulnerabilities for dependency {package="send" version="0.17.1" count=2}
+[09:17:38] DEBUG Found vulnerabilities for dependency {package="serve-static" version="1.14.1" count=2}
+[09:17:38] INFO  Added vulnerabilities to analyzer {count=140}
+[09:17:38] DEBUG Starting reachability analysis {vulnerablePackages=15 reachableFiles=2 useImportHeuristics=true}
+[09:17:38] DEBUG Analyzing package {packageName="axios" vulnCount=12}
+[09:17:38] DEBUG Scanning entire project for imports {projectPath="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app"}
+[09:17:38] DEBUG Found source files to scan {count=19}
+[09:17:38] DEBUG Package imported {package="axios" file="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app\\server.js" confidence=0.7650000000000001}
+[09:17:38] INFO  Found reachable via imports {package="axios" confidence=0.7650000000000001}
+[09:17:38] DEBUG Scanning entire project for imports {projectPath="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app"}
+[09:17:38] DEBUG Found source files to scan {count=19}
+[09:17:38] DEBUG Package imported {package="axios" file="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app\\server.js" confidence=0.7650000000000001}
+[09:17:38] INFO  Found reachable via imports {package="axios" confidence=0.7650000000000001}
+[09:17:38] DEBUG Scanning entire project for imports {projectPath="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app"}
+[09:17:38] DEBUG Found source files to scan {count=19}
+[09:17:38] DEBUG Package imported {package="axios" file="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app\\server.js" confidence=0.7650000000000001}
+[09:17:38] INFO  Found reachable via imports {package="axios" confidence=0.7650000000000001}
+[09:17:38] DEBUG Scanning entire project for imports {projectPath="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app"}
+[09:17:38] DEBUG Found source files to scan {count=19}
+[09:17:38] DEBUG Package imported {package="axios" file="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app\\server.js" confidence=0.7650000000000001}
+[09:17:38] INFO  Found reachable via imports {package="axios" confidence=0.7650000000000001}
+[09:17:38] DEBUG Scanning entire project for imports {projectPath="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app"}
+[09:17:38] DEBUG Found source files to scan {count=19}
+[09:17:38] DEBUG Package imported {package="axios" file="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app\\server.js" confidence=0.7650000000000001}
+[09:17:38] INFO  Found reachable via imports {package="axios" confidence=0.7650000000000001}
+[09:17:38] DEBUG Scanning entire project for imports {projectPath="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app"}
+[09:17:38] DEBUG Found source files to scan {count=19}
+[09:17:38] DEBUG Package imported {package="axios" file="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app\\server.js" confidence=0.7650000000000001}
+[09:17:38] INFO  Found reachable via imports {package="axios" confidence=0.7650000000000001}
+[09:17:38] DEBUG Scanning entire project for imports {projectPath="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app"}
+[09:17:38] DEBUG Found source files to scan {count=19}
+[09:17:38] DEBUG Package imported {package="axios" file="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app\\server.js" confidence=0.7650000000000001}
+[09:17:38] INFO  Found reachable via imports {package="axios" confidence=0.7650000000000001}
+[09:17:38] DEBUG Scanning entire project for imports {projectPath="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app"}
+[09:17:38] DEBUG Found source files to scan {count=19}
+[09:17:38] DEBUG Package imported {package="axios" file="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app\\server.js" confidence=0.7650000000000001}
+[09:17:38] INFO  Found reachable via imports {package="axios" confidence=0.7650000000000001}
+[09:17:38] DEBUG Scanning entire project for imports {projectPath="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app"}
+[09:17:38] DEBUG Found source files to scan {count=19}
+[09:17:38] DEBUG Package imported {package="axios" file="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app\\server.js" confidence=0.7650000000000001}
+[09:17:38] INFO  Found reachable via imports {package="axios" confidence=0.7650000000000001}
+[09:17:38] DEBUG Scanning entire project for imports {projectPath="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app"}
+[09:17:38] DEBUG Found source files to scan {count=19}
+[09:17:38] DEBUG Package imported {package="axios" file="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app\\server.js" confidence=0.7650000000000001}
+[09:17:38] INFO  Found reachable via imports {package="axios" confidence=0.7650000000000001}
+[09:17:38] DEBUG Scanning entire project for imports {projectPath="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app"}
+[09:17:38] DEBUG Found source files to scan {count=19}
+[09:17:38] DEBUG Package imported {package="axios" file="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app\\server.js" confidence=0.7650000000000001}
+[09:17:38] INFO  Found reachable via imports {package="axios" confidence=0.7650000000000001}
+[09:17:38] DEBUG Scanning entire project for imports {projectPath="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app"}
+[09:17:38] DEBUG Found source files to scan {count=19}
+[09:17:38] DEBUG Package imported {package="axios" file="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app\\server.js" confidence=0.7650000000000001}
+[09:17:38] INFO  Found reachable via imports {package="axios" confidence=0.7650000000000001}
+[09:17:38] DEBUG Analyzing package {packageName="body-parser" vulnCount=4}
+[09:17:38] DEBUG Scanning entire project for imports {projectPath="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app"}
+[09:17:38] DEBUG Found source files to scan {count=19}
+[09:17:38] DEBUG Scanning entire project for imports {projectPath="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app"}
+[09:17:38] DEBUG Found source files to scan {count=19}
+[09:17:38] DEBUG Scanning entire project for imports {projectPath="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app"}
+[09:17:38] DEBUG Found source files to scan {count=19}
+[09:17:38] DEBUG Scanning entire project for imports {projectPath="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app"}
+[09:17:38] DEBUG Found source files to scan {count=19}
+[09:17:38] DEBUG Analyzing package {packageName="cookie" vulnCount=4}
+[09:17:38] DEBUG Scanning entire project for imports {projectPath="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app"}
+[09:17:38] DEBUG Found source files to scan {count=19}
+[09:17:38] DEBUG Scanning entire project for imports {projectPath="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app"}
+[09:17:38] DEBUG Found source files to scan {count=19}
+[09:17:38] DEBUG Scanning entire project for imports {projectPath="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app"}
+[09:17:38] DEBUG Found source files to scan {count=19}
+[09:17:38] DEBUG Scanning entire project for imports {projectPath="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app"}
+[09:17:38] DEBUG Found source files to scan {count=19}
+[09:17:38] DEBUG Analyzing package {packageName="ejs" vulnCount=8}
+[09:17:38] DEBUG Scanning entire project for imports {projectPath="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app"}
+[09:17:38] DEBUG Found source files to scan {count=19}
+[09:17:38] DEBUG Package imported {package="ejs" file="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app\\handlers\\html-handler.js" confidence=0.75}
+[09:17:38] INFO  Found reachable via imports {package="ejs" confidence=0.75}
+[09:17:38] DEBUG Scanning entire project for imports {projectPath="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app"}
+[09:17:38] DEBUG Found source files to scan {count=19}
+[09:17:38] DEBUG Package imported {package="ejs" file="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app\\handlers\\html-handler.js" confidence=0.75}
+[09:17:38] INFO  Found reachable via imports {package="ejs" confidence=0.75}
+[09:17:38] DEBUG Scanning entire project for imports {projectPath="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app"}
+[09:17:38] DEBUG Found source files to scan {count=19}
+[09:17:38] DEBUG Package imported {package="ejs" file="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app\\handlers\\html-handler.js" confidence=0.75}
+[09:17:38] INFO  Found reachable via imports {package="ejs" confidence=0.75}
+[09:17:38] DEBUG Scanning entire project for imports {projectPath="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app"}
+[09:17:38] DEBUG Found source files to scan {count=19}
+[09:17:38] DEBUG Package imported {package="ejs" file="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app\\handlers\\html-handler.js" confidence=0.75}
+[09:17:38] INFO  Found reachable via imports {package="ejs" confidence=0.75}
+[09:17:38] DEBUG Scanning entire project for imports {projectPath="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app"}
+[09:17:38] DEBUG Found source files to scan {count=19}
+[09:17:38] DEBUG Package imported {package="ejs" file="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app\\handlers\\html-handler.js" confidence=0.75}
+[09:17:38] INFO  Found reachable via imports {package="ejs" confidence=0.75}
+[09:17:38] DEBUG Scanning entire project for imports {projectPath="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app"}
+[09:17:38] DEBUG Found source files to scan {count=19}
+[09:17:38] DEBUG Package imported {package="ejs" file="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app\\handlers\\html-handler.js" confidence=0.75}
+[09:17:38] INFO  Found reachable via imports {package="ejs" confidence=0.75}
+[09:17:38] DEBUG Scanning entire project for imports {projectPath="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app"}
+[09:17:38] DEBUG Found source files to scan {count=19}
+[09:17:38] DEBUG Package imported {package="ejs" file="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app\\handlers\\html-handler.js" confidence=0.75}
+[09:17:38] INFO  Found reachable via imports {package="ejs" confidence=0.75}
+[09:17:38] DEBUG Scanning entire project for imports {projectPath="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app"}
+[09:17:38] DEBUG Found source files to scan {count=19}
+[09:17:38] DEBUG Package imported {package="ejs" file="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app\\handlers\\html-handler.js" confidence=0.75}
+[09:17:38] INFO  Found reachable via imports {package="ejs" confidence=0.75}
+[09:17:38] DEBUG Analyzing package {packageName="express" vulnCount=8}
+[09:17:38] DEBUG Scanning entire project for imports {projectPath="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app"}
+[09:17:38] DEBUG Found source files to scan {count=19}
+[09:17:38] DEBUG Package imported {package="express" file="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app\\server.js" confidence=0.7650000000000001}
+[09:17:38] INFO  Found reachable via imports {package="express" confidence=0.7650000000000001}
+[09:17:38] DEBUG Scanning entire project for imports {projectPath="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app"}
+[09:17:38] DEBUG Found source files to scan {count=19}
+[09:17:38] DEBUG Package imported {package="express" file="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app\\server.js" confidence=0.7650000000000001}
+[09:17:38] INFO  Found reachable via imports {package="express" confidence=0.7650000000000001}
+[09:17:38] DEBUG Scanning entire project for imports {projectPath="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app"}
+[09:17:38] DEBUG Found source files to scan {count=19}
+[09:17:38] DEBUG Package imported {package="express" file="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app\\server.js" confidence=0.7650000000000001}
+[09:17:38] INFO  Found reachable via imports {package="express" confidence=0.7650000000000001}
+[09:17:38] DEBUG Scanning entire project for imports {projectPath="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app"}
+[09:17:38] DEBUG Found source files to scan {count=19}
+[09:17:38] DEBUG Package imported {package="express" file="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app\\server.js" confidence=0.7650000000000001}
+[09:17:38] INFO  Found reachable via imports {package="express" confidence=0.7650000000000001}
+[09:17:38] DEBUG Scanning entire project for imports {projectPath="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app"}
+[09:17:38] DEBUG Found source files to scan {count=19}
+[09:17:38] DEBUG Package imported {package="express" file="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app\\server.js" confidence=0.7650000000000001}
+[09:17:38] INFO  Found reachable via imports {package="express" confidence=0.7650000000000001}
+[09:17:38] DEBUG Scanning entire project for imports {projectPath="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app"}
+[09:17:38] DEBUG Found source files to scan {count=19}
+[09:17:38] DEBUG Package imported {package="express" file="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app\\server.js" confidence=0.7650000000000001}
+[09:17:38] INFO  Found reachable via imports {package="express" confidence=0.7650000000000001}
+[09:17:38] DEBUG Scanning entire project for imports {projectPath="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app"}
+[09:17:38] DEBUG Found source files to scan {count=19}
+[09:17:38] DEBUG Package imported {package="express" file="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app\\server.js" confidence=0.7650000000000001}
+[09:17:38] INFO  Found reachable via imports {package="express" confidence=0.7650000000000001}
+[09:17:38] DEBUG Scanning entire project for imports {projectPath="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app"}
+[09:17:38] DEBUG Found source files to scan {count=19}
+[09:17:38] DEBUG Package imported {package="express" file="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app\\server.js" confidence=0.7650000000000001}
+[09:17:38] INFO  Found reachable via imports {package="express" confidence=0.7650000000000001}
+[09:17:38] DEBUG Analyzing package {packageName="jsonwebtoken" vulnCount=40}
+[09:17:38] DEBUG Scanning entire project for imports {projectPath="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app"}
+[09:17:38] DEBUG Found source files to scan {count=19}
+[09:17:38] DEBUG Package imported {package="jsonwebtoken" file="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app\\middleware\\auth.js" confidence=0.7650000000000001}
+[09:17:38] INFO  Found reachable via imports {package="jsonwebtoken" confidence=0.7650000000000001}
+[09:17:38] DEBUG Scanning entire project for imports {projectPath="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app"}
+[09:17:38] DEBUG Found source files to scan {count=19}
+[09:17:38] DEBUG Package imported {package="jsonwebtoken" file="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app\\middleware\\auth.js" confidence=0.7650000000000001}
+[09:17:38] INFO  Found reachable via imports {package="jsonwebtoken" confidence=0.7650000000000001}
+[09:17:38] DEBUG Scanning entire project for imports {projectPath="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app"}
+[09:17:38] DEBUG Found source files to scan {count=19}
+[09:17:38] DEBUG Package imported {package="jsonwebtoken" file="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app\\middleware\\auth.js" confidence=0.7650000000000001}
+[09:17:38] INFO  Found reachable via imports {package="jsonwebtoken" confidence=0.7650000000000001}
+[09:17:38] DEBUG Scanning entire project for imports {projectPath="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app"}
+[09:17:38] DEBUG Found source files to scan {count=19}
+[09:17:38] DEBUG Package imported {package="jsonwebtoken" file="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app\\middleware\\auth.js" confidence=0.7650000000000001}
+[09:17:38] INFO  Found reachable via imports {package="jsonwebtoken" confidence=0.7650000000000001}
+[09:17:38] DEBUG Scanning entire project for imports {projectPath="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app"}
+[09:17:38] DEBUG Found source files to scan {count=19}
+[09:17:38] DEBUG Package imported {package="jsonwebtoken" file="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app\\middleware\\auth.js" confidence=0.7650000000000001}
+[09:17:38] INFO  Found reachable via imports {package="jsonwebtoken" confidence=0.7650000000000001}
+[09:17:38] DEBUG Scanning entire project for imports {projectPath="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app"}
+[09:17:38] DEBUG Found source files to scan {count=19}
+[09:17:38] DEBUG Package imported {package="jsonwebtoken" file="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app\\middleware\\auth.js" confidence=0.7650000000000001}
+[09:17:38] INFO  Found reachable via imports {package="jsonwebtoken" confidence=0.7650000000000001}
+[09:17:38] DEBUG Scanning entire project for imports {projectPath="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app"}
+[09:17:38] DEBUG Found source files to scan {count=19}
+[09:17:38] DEBUG Package imported {package="jsonwebtoken" file="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app\\middleware\\auth.js" confidence=0.7650000000000001}
+[09:17:38] INFO  Found reachable via imports {package="jsonwebtoken" confidence=0.7650000000000001}
+[09:17:38] DEBUG Scanning entire project for imports {projectPath="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app"}
+[09:17:38] DEBUG Found source files to scan {count=19}
+[09:17:38] DEBUG Package imported {package="jsonwebtoken" file="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app\\middleware\\auth.js" confidence=0.7650000000000001}
+[09:17:38] INFO  Found reachable via imports {package="jsonwebtoken" confidence=0.7650000000000001}
+[09:17:38] DEBUG Scanning entire project for imports {projectPath="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app"}
+[09:17:38] DEBUG Found source files to scan {count=19}
+[09:17:38] DEBUG Package imported {package="jsonwebtoken" file="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app\\middleware\\auth.js" confidence=0.7650000000000001}
+[09:17:38] INFO  Found reachable via imports {package="jsonwebtoken" confidence=0.7650000000000001}
+[09:17:38] DEBUG Scanning entire project for imports {projectPath="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app"}
+[09:17:38] DEBUG Found source files to scan {count=19}
+[09:17:38] DEBUG Package imported {package="jsonwebtoken" file="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app\\middleware\\auth.js" confidence=0.7650000000000001}
+[09:17:38] INFO  Found reachable via imports {package="jsonwebtoken" confidence=0.7650000000000001}
+[09:17:38] DEBUG Scanning entire project for imports {projectPath="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app"}
+[09:17:38] DEBUG Found source files to scan {count=19}
+[09:17:38] DEBUG Package imported {package="jsonwebtoken" file="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app\\middleware\\auth.js" confidence=0.7650000000000001}
+[09:17:38] INFO  Found reachable via imports {package="jsonwebtoken" confidence=0.7650000000000001}
+[09:17:38] DEBUG Scanning entire project for imports {projectPath="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app"}
+[09:17:38] DEBUG Found source files to scan {count=19}
+[09:17:38] DEBUG Package imported {package="jsonwebtoken" file="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app\\middleware\\auth.js" confidence=0.7650000000000001}
+[09:17:38] INFO  Found reachable via imports {package="jsonwebtoken" confidence=0.7650000000000001}
+[09:17:38] DEBUG Scanning entire project for imports {projectPath="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app"}
+[09:17:38] DEBUG Found source files to scan {count=19}
+[09:17:38] DEBUG Package imported {package="jsonwebtoken" file="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app\\middleware\\auth.js" confidence=0.7650000000000001}
+[09:17:38] INFO  Found reachable via imports {package="jsonwebtoken" confidence=0.7650000000000001}
+[09:17:38] DEBUG Scanning entire project for imports {projectPath="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app"}
+[09:17:38] DEBUG Found source files to scan {count=19}
+[09:17:38] DEBUG Package imported {package="jsonwebtoken" file="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app\\middleware\\auth.js" confidence=0.7650000000000001}
+[09:17:38] INFO  Found reachable via imports {package="jsonwebtoken" confidence=0.7650000000000001}
+[09:17:38] DEBUG Scanning entire project for imports {projectPath="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app"}
+[09:17:38] DEBUG Found source files to scan {count=19}
+[09:17:38] DEBUG Package imported {package="jsonwebtoken" file="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app\\middleware\\auth.js" confidence=0.7650000000000001}
+[09:17:38] INFO  Found reachable via imports {package="jsonwebtoken" confidence=0.7650000000000001}
+[09:17:38] DEBUG Scanning entire project for imports {projectPath="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app"}
+[09:17:38] DEBUG Found source files to scan {count=19}
+[09:17:38] DEBUG Package imported {package="jsonwebtoken" file="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app\\middleware\\auth.js" confidence=0.7650000000000001}
+[09:17:38] INFO  Found reachable via imports {package="jsonwebtoken" confidence=0.7650000000000001}
+[09:17:38] DEBUG Scanning entire project for imports {projectPath="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app"}
+[09:17:38] DEBUG Found source files to scan {count=19}
+[09:17:38] DEBUG Package imported {package="jsonwebtoken" file="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app\\middleware\\auth.js" confidence=0.7650000000000001}
+[09:17:38] INFO  Found reachable via imports {package="jsonwebtoken" confidence=0.7650000000000001}
+[09:17:38] DEBUG Scanning entire project for imports {projectPath="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app"}
+[09:17:38] DEBUG Found source files to scan {count=19}
+[09:17:38] DEBUG Package imported {package="jsonwebtoken" file="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app\\middleware\\auth.js" confidence=0.7650000000000001}
+[09:17:38] INFO  Found reachable via imports {package="jsonwebtoken" confidence=0.7650000000000001}
+[09:17:38] DEBUG Scanning entire project for imports {projectPath="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app"}
+[09:17:38] DEBUG Found source files to scan {count=19}
+[09:17:38] DEBUG Package imported {package="jsonwebtoken" file="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app\\middleware\\auth.js" confidence=0.7650000000000001}
+[09:17:38] INFO  Found reachable via imports {package="jsonwebtoken" confidence=0.7650000000000001}
+[09:17:38] DEBUG Scanning entire project for imports {projectPath="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app"}
+[09:17:38] DEBUG Found source files to scan {count=19}
+[09:17:38] DEBUG Package imported {package="jsonwebtoken" file="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app\\middleware\\auth.js" confidence=0.7650000000000001}
+[09:17:38] INFO  Found reachable via imports {package="jsonwebtoken" confidence=0.7650000000000001}
+[09:17:38] DEBUG Scanning entire project for imports {projectPath="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app"}
+[09:17:38] DEBUG Found source files to scan {count=19}
+[09:17:38] DEBUG Package imported {package="jsonwebtoken" file="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app\\middleware\\auth.js" confidence=0.7650000000000001}
+[09:17:38] INFO  Found reachable via imports {package="jsonwebtoken" confidence=0.7650000000000001}
+[09:17:38] DEBUG Scanning entire project for imports {projectPath="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app"}
+[09:17:38] DEBUG Found source files to scan {count=19}
+[09:17:38] DEBUG Package imported {package="jsonwebtoken" file="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app\\middleware\\auth.js" confidence=0.7650000000000001}
+[09:17:38] INFO  Found reachable via imports {package="jsonwebtoken" confidence=0.7650000000000001}
+[09:17:38] DEBUG Scanning entire project for imports {projectPath="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app"}
+[09:17:38] DEBUG Found source files to scan {count=19}
+[09:17:38] DEBUG Package imported {package="jsonwebtoken" file="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app\\middleware\\auth.js" confidence=0.7650000000000001}
+[09:17:38] INFO  Found reachable via imports {package="jsonwebtoken" confidence=0.7650000000000001}
+[09:17:38] DEBUG Scanning entire project for imports {projectPath="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app"}
+[09:17:38] DEBUG Found source files to scan {count=19}
+[09:17:38] DEBUG Package imported {package="jsonwebtoken" file="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app\\middleware\\auth.js" confidence=0.7650000000000001}
+[09:17:38] INFO  Found reachable via imports {package="jsonwebtoken" confidence=0.7650000000000001}
+[09:17:38] DEBUG Scanning entire project for imports {projectPath="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app"}
+[09:17:38] DEBUG Found source files to scan {count=19}
+[09:17:38] DEBUG Package imported {package="jsonwebtoken" file="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app\\middleware\\auth.js" confidence=0.7650000000000001}
+[09:17:38] INFO  Found reachable via imports {package="jsonwebtoken" confidence=0.7650000000000001}
+[09:17:38] DEBUG Scanning entire project for imports {projectPath="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app"}
+[09:17:38] DEBUG Found source files to scan {count=19}
+[09:17:38] DEBUG Package imported {package="jsonwebtoken" file="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app\\middleware\\auth.js" confidence=0.7650000000000001}
+[09:17:38] INFO  Found reachable via imports {package="jsonwebtoken" confidence=0.7650000000000001}
+[09:17:38] DEBUG Scanning entire project for imports {projectPath="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app"}
+[09:17:38] DEBUG Found source files to scan {count=19}
+[09:17:38] DEBUG Package imported {package="jsonwebtoken" file="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app\\middleware\\auth.js" confidence=0.7650000000000001}
+[09:17:38] INFO  Found reachable via imports {package="jsonwebtoken" confidence=0.7650000000000001}
+[09:17:38] DEBUG Scanning entire project for imports {projectPath="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app"}
+[09:17:38] DEBUG Found source files to scan {count=19}
+[09:17:38] DEBUG Package imported {package="jsonwebtoken" file="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app\\middleware\\auth.js" confidence=0.7650000000000001}
+[09:17:38] INFO  Found reachable via imports {package="jsonwebtoken" confidence=0.7650000000000001}
+[09:17:38] DEBUG Scanning entire project for imports {projectPath="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app"}
+[09:17:38] DEBUG Found source files to scan {count=19}
+[09:17:38] DEBUG Package imported {package="jsonwebtoken" file="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app\\middleware\\auth.js" confidence=0.7650000000000001}
+[09:17:38] INFO  Found reachable via imports {package="jsonwebtoken" confidence=0.7650000000000001}
+[09:17:38] DEBUG Scanning entire project for imports {projectPath="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app"}
+[09:17:38] DEBUG Found source files to scan {count=19}
+[09:17:38] DEBUG Package imported {package="jsonwebtoken" file="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app\\middleware\\auth.js" confidence=0.7650000000000001}
+[09:17:38] INFO  Found reachable via imports {package="jsonwebtoken" confidence=0.7650000000000001}
+[09:17:38] DEBUG Scanning entire project for imports {projectPath="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app"}
+[09:17:38] DEBUG Found source files to scan {count=19}
+[09:17:38] DEBUG Package imported {package="jsonwebtoken" file="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app\\middleware\\auth.js" confidence=0.7650000000000001}
+[09:17:38] INFO  Found reachable via imports {package="jsonwebtoken" confidence=0.7650000000000001}
+[09:17:38] DEBUG Scanning entire project for imports {projectPath="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app"}
+[09:17:38] DEBUG Found source files to scan {count=19}
+[09:17:38] DEBUG Package imported {package="jsonwebtoken" file="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app\\middleware\\auth.js" confidence=0.7650000000000001}
+[09:17:38] INFO  Found reachable via imports {package="jsonwebtoken" confidence=0.7650000000000001}
+[09:17:38] DEBUG Scanning entire project for imports {projectPath="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app"}
+[09:17:38] DEBUG Found source files to scan {count=19}
+[09:17:38] DEBUG Package imported {package="jsonwebtoken" file="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app\\middleware\\auth.js" confidence=0.7650000000000001}
+[09:17:38] INFO  Found reachable via imports {package="jsonwebtoken" confidence=0.7650000000000001}
+[09:17:38] DEBUG Scanning entire project for imports {projectPath="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app"}
+[09:17:38] DEBUG Found source files to scan {count=19}
+[09:17:38] DEBUG Package imported {package="jsonwebtoken" file="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app\\middleware\\auth.js" confidence=0.7650000000000001}
+[09:17:38] INFO  Found reachable via imports {package="jsonwebtoken" confidence=0.7650000000000001}
+[09:17:38] DEBUG Scanning entire project for imports {projectPath="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app"}
+[09:17:38] DEBUG Found source files to scan {count=19}
+[09:17:38] DEBUG Package imported {package="jsonwebtoken" file="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app\\middleware\\auth.js" confidence=0.7650000000000001}
+[09:17:38] INFO  Found reachable via imports {package="jsonwebtoken" confidence=0.7650000000000001}
+[09:17:38] DEBUG Scanning entire project for imports {projectPath="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app"}
+[09:17:38] DEBUG Found source files to scan {count=19}
+[09:17:38] DEBUG Package imported {package="jsonwebtoken" file="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app\\middleware\\auth.js" confidence=0.7650000000000001}
+[09:17:38] INFO  Found reachable via imports {package="jsonwebtoken" confidence=0.7650000000000001}
+[09:17:38] DEBUG Scanning entire project for imports {projectPath="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app"}
+[09:17:38] DEBUG Found source files to scan {count=19}
+[09:17:38] DEBUG Package imported {package="jsonwebtoken" file="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app\\middleware\\auth.js" confidence=0.7650000000000001}
+[09:17:38] INFO  Found reachable via imports {package="jsonwebtoken" confidence=0.7650000000000001}
+[09:17:38] DEBUG Scanning entire project for imports {projectPath="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app"}
+[09:17:38] DEBUG Found source files to scan {count=19}
+[09:17:38] DEBUG Package imported {package="jsonwebtoken" file="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app\\middleware\\auth.js" confidence=0.7650000000000001}
+[09:17:38] INFO  Found reachable via imports {package="jsonwebtoken" confidence=0.7650000000000001}
+[09:17:38] DEBUG Scanning entire project for imports {projectPath="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app"}
+[09:17:38] DEBUG Found source files to scan {count=19}
+[09:17:38] DEBUG Package imported {package="jsonwebtoken" file="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app\\middleware\\auth.js" confidence=0.7650000000000001}
+[09:17:38] INFO  Found reachable via imports {package="jsonwebtoken" confidence=0.7650000000000001}
+[09:17:38] DEBUG Scanning entire project for imports {projectPath="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app"}
+[09:17:38] DEBUG Found source files to scan {count=19}
+[09:17:38] DEBUG Package imported {package="jsonwebtoken" file="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app\\middleware\\auth.js" confidence=0.7650000000000001}
+[09:17:38] INFO  Found reachable via imports {package="jsonwebtoken" confidence=0.7650000000000001}
+[09:17:38] DEBUG Analyzing package {packageName="lodash" vulnCount=12}
+[09:17:38] DEBUG Scanning entire project for imports {projectPath="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app"}
+[09:17:38] DEBUG Found source files to scan {count=19}
+[09:17:38] DEBUG Package imported {package="lodash" file="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app\\config\\dev-config.js" confidence=0.7650000000000001}
+[09:17:38] INFO  Found reachable via imports {package="lodash" confidence=0.7650000000000001}
+[09:17:38] DEBUG Scanning entire project for imports {projectPath="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app"}
+[09:17:38] DEBUG Found source files to scan {count=19}
+[09:17:38] DEBUG Package imported {package="lodash" file="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app\\config\\dev-config.js" confidence=0.7650000000000001}
+[09:17:38] INFO  Found reachable via imports {package="lodash" confidence=0.7650000000000001}
+[09:17:38] DEBUG Scanning entire project for imports {projectPath="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app"}
+[09:17:38] DEBUG Found source files to scan {count=19}
+[09:17:38] DEBUG Package imported {package="lodash" file="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app\\config\\dev-config.js" confidence=0.7650000000000001}
+[09:17:38] INFO  Found reachable via imports {package="lodash" confidence=0.7650000000000001}
+[09:17:38] DEBUG Scanning entire project for imports {projectPath="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app"}
+[09:17:38] DEBUG Found source files to scan {count=19}
+[09:17:38] DEBUG Package imported {package="lodash" file="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app\\config\\dev-config.js" confidence=0.7650000000000001}
+[09:17:38] INFO  Found reachable via imports {package="lodash" confidence=0.7650000000000001}
+[09:17:38] DEBUG Scanning entire project for imports {projectPath="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app"}
+[09:17:38] DEBUG Found source files to scan {count=19}
+[09:17:38] DEBUG Package imported {package="lodash" file="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app\\config\\dev-config.js" confidence=0.7650000000000001}
+[09:17:38] INFO  Found reachable via imports {package="lodash" confidence=0.7650000000000001}
+[09:17:38] DEBUG Scanning entire project for imports {projectPath="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app"}
+[09:17:38] DEBUG Found source files to scan {count=19}
+[09:17:38] DEBUG Package imported {package="lodash" file="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app\\config\\dev-config.js" confidence=0.7650000000000001}
+[09:17:38] INFO  Found reachable via imports {package="lodash" confidence=0.7650000000000001}
+[09:17:38] DEBUG Scanning entire project for imports {projectPath="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app"}
+[09:17:38] DEBUG Found source files to scan {count=19}
+[09:17:38] DEBUG Package imported {package="lodash" file="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app\\config\\dev-config.js" confidence=0.7650000000000001}
+[09:17:38] INFO  Found reachable via imports {package="lodash" confidence=0.7650000000000001}
+[09:17:38] DEBUG Scanning entire project for imports {projectPath="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app"}
+[09:17:38] DEBUG Found source files to scan {count=19}
+[09:17:38] DEBUG Package imported {package="lodash" file="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app\\config\\dev-config.js" confidence=0.7650000000000001}
+[09:17:38] INFO  Found reachable via imports {package="lodash" confidence=0.7650000000000001}
+[09:17:38] DEBUG Scanning entire project for imports {projectPath="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app"}
+[09:17:38] DEBUG Found source files to scan {count=19}
+[09:17:38] DEBUG Package imported {package="lodash" file="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app\\config\\dev-config.js" confidence=0.7650000000000001}
+[09:17:38] INFO  Found reachable via imports {package="lodash" confidence=0.7650000000000001}
+[09:17:38] DEBUG Scanning entire project for imports {projectPath="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app"}
+[09:17:38] DEBUG Found source files to scan {count=19}
+[09:17:38] DEBUG Package imported {package="lodash" file="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app\\config\\dev-config.js" confidence=0.7650000000000001}
+[09:17:38] INFO  Found reachable via imports {package="lodash" confidence=0.7650000000000001}
+[09:17:38] DEBUG Scanning entire project for imports {projectPath="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app"}
+[09:17:38] DEBUG Found source files to scan {count=19}
+[09:17:38] DEBUG Package imported {package="lodash" file="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app\\config\\dev-config.js" confidence=0.7650000000000001}
+[09:17:38] INFO  Found reachable via imports {package="lodash" confidence=0.7650000000000001}
+[09:17:38] DEBUG Scanning entire project for imports {projectPath="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app"}
+[09:17:38] DEBUG Found source files to scan {count=19}
+[09:17:38] DEBUG Package imported {package="lodash" file="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app\\config\\dev-config.js" confidence=0.7650000000000001}
+[09:17:38] INFO  Found reachable via imports {package="lodash" confidence=0.7650000000000001}
+[09:17:38] DEBUG Analyzing package {packageName="minimist" vulnCount=4}
+[09:17:38] DEBUG Scanning entire project for imports {projectPath="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app"}
+[09:17:38] DEBUG Found source files to scan {count=19}
+[09:17:38] DEBUG Package imported {package="minimist" file="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app\\utils\\error-formatter.js" confidence=0.7650000000000001}
+[09:17:38] INFO  Found reachable via imports {package="minimist" confidence=0.7650000000000001}
+[09:17:38] DEBUG Scanning entire project for imports {projectPath="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app"}
+[09:17:38] DEBUG Found source files to scan {count=19}
+[09:17:38] DEBUG Package imported {package="minimist" file="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app\\utils\\error-formatter.js" confidence=0.7650000000000001}
+[09:17:38] INFO  Found reachable via imports {package="minimist" confidence=0.7650000000000001}
+[09:17:38] DEBUG Scanning entire project for imports {projectPath="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app"}
+[09:17:38] DEBUG Found source files to scan {count=19}
+[09:17:38] DEBUG Package imported {package="minimist" file="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app\\utils\\error-formatter.js" confidence=0.7650000000000001}
+[09:17:38] INFO  Found reachable via imports {package="minimist" confidence=0.7650000000000001}
+[09:17:38] DEBUG Scanning entire project for imports {projectPath="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app"}
+[09:17:38] DEBUG Found source files to scan {count=19}
+[09:17:38] DEBUG Package imported {package="minimist" file="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app\\utils\\error-formatter.js" confidence=0.7650000000000001}
+[09:17:38] INFO  Found reachable via imports {package="minimist" confidence=0.7650000000000001}
+[09:17:38] DEBUG Analyzing package {packageName="path-to-regexp" vulnCount=8}
+[09:17:38] DEBUG Scanning entire project for imports {projectPath="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app"}
+[09:17:38] DEBUG Found source files to scan {count=19}
+[09:17:38] DEBUG Scanning entire project for imports {projectPath="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app"}
+[09:17:38] DEBUG Found source files to scan {count=19}
+[09:17:38] DEBUG Scanning entire project for imports {projectPath="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app"}
+[09:17:38] DEBUG Found source files to scan {count=19}
+[09:17:38] DEBUG Scanning entire project for imports {projectPath="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app"}
+[09:17:38] DEBUG Found source files to scan {count=19}
+[09:17:38] DEBUG Scanning entire project for imports {projectPath="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app"}
+[09:17:38] DEBUG Found source files to scan {count=19}
+[09:17:38] DEBUG Scanning entire project for imports {projectPath="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app"}
+[09:17:38] DEBUG Found source files to scan {count=19}
+[09:17:38] DEBUG Scanning entire project for imports {projectPath="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app"}
+[09:17:38] DEBUG Found source files to scan {count=19}
+[09:17:38] DEBUG Scanning entire project for imports {projectPath="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app"}
+[09:17:38] DEBUG Found source files to scan {count=19}
+[09:17:38] DEBUG Analyzing package {packageName="qs" vulnCount=8}
+[09:17:38] DEBUG Scanning entire project for imports {projectPath="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app"}
+[09:17:38] DEBUG Found source files to scan {count=19}
+[09:17:38] DEBUG Scanning entire project for imports {projectPath="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app"}
+[09:17:38] DEBUG Found source files to scan {count=19}
+[09:17:38] DEBUG Scanning entire project for imports {projectPath="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app"}
+[09:17:38] DEBUG Found source files to scan {count=19}
+[09:17:38] DEBUG Scanning entire project for imports {projectPath="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app"}
+[09:17:38] DEBUG Found source files to scan {count=19}
+[09:17:38] DEBUG Scanning entire project for imports {projectPath="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app"}
+[09:17:38] DEBUG Found source files to scan {count=19}
+[09:17:38] DEBUG Scanning entire project for imports {projectPath="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app"}
+[09:17:38] DEBUG Found source files to scan {count=19}
+[09:17:38] DEBUG Scanning entire project for imports {projectPath="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app"}
+[09:17:38] DEBUG Found source files to scan {count=19}
+[09:17:38] DEBUG Scanning entire project for imports {projectPath="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app"}
+[09:17:38] DEBUG Found source files to scan {count=19}
+[09:17:38] DEBUG Analyzing package {packageName="semver" vulnCount=4}
+[09:17:38] DEBUG Scanning entire project for imports {projectPath="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app"}
+[09:17:38] DEBUG Found source files to scan {count=19}
+[09:17:38] DEBUG Package imported {package="semver" file="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app\\utils\\version-checker.js" confidence=0.7650000000000001}
+[09:17:38] INFO  Found reachable via imports {package="semver" confidence=0.7650000000000001}
+[09:17:38] DEBUG Scanning entire project for imports {projectPath="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app"}
+[09:17:38] DEBUG Found source files to scan {count=19}
+[09:17:38] DEBUG Package imported {package="semver" file="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app\\utils\\version-checker.js" confidence=0.7650000000000001}
+[09:17:38] INFO  Found reachable via imports {package="semver" confidence=0.7650000000000001}
+[09:17:38] DEBUG Scanning entire project for imports {projectPath="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app"}
+[09:17:38] DEBUG Found source files to scan {count=19}
+[09:17:38] DEBUG Package imported {package="semver" file="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app\\utils\\version-checker.js" confidence=0.7650000000000001}
+[09:17:38] INFO  Found reachable via imports {package="semver" confidence=0.7650000000000001}
+[09:17:38] DEBUG Scanning entire project for imports {projectPath="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app"}
+[09:17:38] DEBUG Found source files to scan {count=19}
+[09:17:38] DEBUG Package imported {package="semver" file="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app\\utils\\version-checker.js" confidence=0.7650000000000001}
+[09:17:38] INFO  Found reachable via imports {package="semver" confidence=0.7650000000000001}
+[09:17:38] DEBUG Analyzing package {packageName="send" vulnCount=4}
+[09:17:38] DEBUG Scanning entire project for imports {projectPath="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app"}
+[09:17:38] DEBUG Found source files to scan {count=19}
+[09:17:38] DEBUG Scanning entire project for imports {projectPath="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app"}
+[09:17:38] DEBUG Found source files to scan {count=19}
+[09:17:38] DEBUG Scanning entire project for imports {projectPath="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app"}
+[09:17:38] DEBUG Found source files to scan {count=19}
+[09:17:38] DEBUG Scanning entire project for imports {projectPath="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app"}
+[09:17:38] DEBUG Found source files to scan {count=19}
+[09:17:38] DEBUG Analyzing package {packageName="serve-static" vulnCount=4}
+[09:17:38] DEBUG Scanning entire project for imports {projectPath="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app"}
+[09:17:38] DEBUG Found source files to scan {count=19}
+[09:17:38] DEBUG Scanning entire project for imports {projectPath="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app"}
+[09:17:38] DEBUG Found source files to scan {count=19}
+[09:17:38] DEBUG Scanning entire project for imports {projectPath="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app"}
+[09:17:38] DEBUG Found source files to scan {count=19}
+[09:17:38] DEBUG Scanning entire project for imports {projectPath="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app"}
+[09:17:38] DEBUG Found source files to scan {count=19}
+[09:17:38] DEBUG Analyzing package {packageName="validator" vulnCount=16}
+[09:17:38] DEBUG Scanning entire project for imports {projectPath="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app"}
+[09:17:38] DEBUG Found source files to scan {count=19}
+[09:17:38] DEBUG Package imported {package="validator" file="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app\\processors\\validator.js" confidence=0.7650000000000001}
+[09:17:38] INFO  Found reachable via imports {package="validator" confidence=0.7650000000000001}
+[09:17:38] DEBUG Scanning entire project for imports {projectPath="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app"}
+[09:17:38] DEBUG Found source files to scan {count=19}
+[09:17:38] DEBUG Package imported {package="validator" file="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app\\processors\\validator.js" confidence=0.7650000000000001}
+[09:17:38] INFO  Found reachable via imports {package="validator" confidence=0.7650000000000001}
+[09:17:38] DEBUG Scanning entire project for imports {projectPath="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app"}
+[09:17:38] DEBUG Found source files to scan {count=19}
+[09:17:38] DEBUG Package imported {package="validator" file="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app\\processors\\validator.js" confidence=0.7650000000000001}
+[09:17:38] INFO  Found reachable via imports {package="validator" confidence=0.7650000000000001}
+[09:17:38] DEBUG Scanning entire project for imports {projectPath="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app"}
+[09:17:38] DEBUG Found source files to scan {count=19}
+[09:17:38] DEBUG Package imported {package="validator" file="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app\\processors\\validator.js" confidence=0.7650000000000001}
+[09:17:38] INFO  Found reachable via imports {package="validator" confidence=0.7650000000000001}
+[09:17:38] DEBUG Scanning entire project for imports {projectPath="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app"}
+[09:17:38] DEBUG Found source files to scan {count=19}
+[09:17:38] DEBUG Package imported {package="validator" file="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app\\processors\\validator.js" confidence=0.7650000000000001}
+[09:17:38] INFO  Found reachable via imports {package="validator" confidence=0.7650000000000001}
+[09:17:38] DEBUG Scanning entire project for imports {projectPath="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app"}
+[09:17:38] DEBUG Found source files to scan {count=19}
+[09:17:38] DEBUG Package imported {package="validator" file="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app\\processors\\validator.js" confidence=0.7650000000000001}
+[09:17:38] INFO  Found reachable via imports {package="validator" confidence=0.7650000000000001}
+[09:17:38] DEBUG Scanning entire project for imports {projectPath="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app"}
+[09:17:38] DEBUG Found source files to scan {count=19}
+[09:17:38] DEBUG Package imported {package="validator" file="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app\\processors\\validator.js" confidence=0.7650000000000001}
+[09:17:38] INFO  Found reachable via imports {package="validator" confidence=0.7650000000000001}
+[09:17:38] DEBUG Scanning entire project for imports {projectPath="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app"}
+[09:17:38] DEBUG Found source files to scan {count=19}
+[09:17:38] DEBUG Package imported {package="validator" file="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app\\processors\\validator.js" confidence=0.7650000000000001}
+[09:17:38] INFO  Found reachable via imports {package="validator" confidence=0.7650000000000001}
+[09:17:38] DEBUG Scanning entire project for imports {projectPath="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app"}
+[09:17:38] DEBUG Found source files to scan {count=19}
+[09:17:38] DEBUG Package imported {package="validator" file="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app\\processors\\validator.js" confidence=0.7650000000000001}
+[09:17:38] INFO  Found reachable via imports {package="validator" confidence=0.7650000000000001}
+[09:17:38] DEBUG Scanning entire project for imports {projectPath="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app"}
+[09:17:38] DEBUG Found source files to scan {count=19}
+[09:17:38] DEBUG Package imported {package="validator" file="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app\\processors\\validator.js" confidence=0.7650000000000001}
+[09:17:38] INFO  Found reachable via imports {package="validator" confidence=0.7650000000000001}
+[09:17:38] DEBUG Scanning entire project for imports {projectPath="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app"}
+[09:17:38] DEBUG Found source files to scan {count=19}
+[09:17:38] DEBUG Package imported {package="validator" file="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app\\processors\\validator.js" confidence=0.7650000000000001}
+[09:17:38] INFO  Found reachable via imports {package="validator" confidence=0.7650000000000001}
+[09:17:38] DEBUG Scanning entire project for imports {projectPath="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app"}
+[09:17:38] DEBUG Found source files to scan {count=19}
+[09:17:38] DEBUG Package imported {package="validator" file="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app\\processors\\validator.js" confidence=0.7650000000000001}
+[09:17:38] INFO  Found reachable via imports {package="validator" confidence=0.7650000000000001}
+[09:17:38] DEBUG Scanning entire project for imports {projectPath="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app"}
+[09:17:38] DEBUG Found source files to scan {count=19}
+[09:17:38] DEBUG Package imported {package="validator" file="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app\\processors\\validator.js" confidence=0.7650000000000001}
+[09:17:38] INFO  Found reachable via imports {package="validator" confidence=0.7650000000000001}
+[09:17:38] DEBUG Scanning entire project for imports {projectPath="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app"}
+[09:17:38] DEBUG Found source files to scan {count=19}
+[09:17:38] DEBUG Package imported {package="validator" file="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app\\processors\\validator.js" confidence=0.7650000000000001}
+[09:17:38] INFO  Found reachable via imports {package="validator" confidence=0.7650000000000001}
+[09:17:38] DEBUG Scanning entire project for imports {projectPath="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app"}
+[09:17:38] DEBUG Found source files to scan {count=19}
+[09:17:38] DEBUG Package imported {package="validator" file="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app\\processors\\validator.js" confidence=0.7650000000000001}
+[09:17:38] INFO  Found reachable via imports {package="validator" confidence=0.7650000000000001}
+[09:17:38] DEBUG Scanning entire project for imports {projectPath="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app"}
+[09:17:38] DEBUG Found source files to scan {count=19}
+[09:17:38] DEBUG Package imported {package="validator" file="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app\\processors\\validator.js" confidence=0.7650000000000001}
+[09:17:38] INFO  Found reachable via imports {package="validator" confidence=0.7650000000000001}
+[09:17:38] DEBUG Analyzing package {packageName="xml2js" vulnCount=4}
+[09:17:38] DEBUG Scanning entire project for imports {projectPath="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app"}
+[09:17:38] DEBUG Found source files to scan {count=19}
+[09:17:38] DEBUG Package imported {package="xml2js" file="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app\\parsers\\xml-parser.js" confidence=0.7650000000000001}
+[09:17:38] INFO  Found reachable via imports {package="xml2js" confidence=0.7650000000000001}
+[09:17:38] DEBUG Scanning entire project for imports {projectPath="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app"}
+[09:17:38] DEBUG Found source files to scan {count=19}
+[09:17:39] DEBUG Package imported {package="xml2js" file="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app\\parsers\\xml-parser.js" confidence=0.7650000000000001}
+[09:17:39] INFO  Found reachable via imports {package="xml2js" confidence=0.7650000000000001}
+[09:17:39] DEBUG Scanning entire project for imports {projectPath="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app"}
+[09:17:39] DEBUG Found source files to scan {count=19}
+[09:17:39] DEBUG Package imported {package="xml2js" file="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app\\parsers\\xml-parser.js" confidence=0.7650000000000001}
+[09:17:39] INFO  Found reachable via imports {package="xml2js" confidence=0.7650000000000001}
+[09:17:39] DEBUG Scanning entire project for imports {projectPath="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app"}
+[09:17:39] DEBUG Found source files to scan {count=19}
+[09:17:39] DEBUG Package imported {package="xml2js" file="C:\\Users\\cczin\\appservice-scan\\examples\\vulnerable-test-app\\parsers\\xml-parser.js" confidence=0.7650000000000001}
+[09:17:39] INFO  Found reachable via imports {package="xml2js" confidence=0.7650000000000001}
+  ✓ Analyzed 108 potential vulnerabilities
+
+✅ Phase 7: Generating results...
+  ✓ 108 high-confidence findings
+
+============================================================
+✓ Scan complete: Found 108 reachable vulnerabilities
+
+[09:17:39] DEBUG Generating report {format="table" resultCount=108}
+
+╔════════════════════════════════════════════════════════════════╗
+║ DepGuard Security Report                                       ║
+╠════════════════════════════════════════════════════════════════╣
+║ Total Dependencies: 192                                       ║
+║ Vulnerabilities Found: 17                                    ║
+║ Reachable Vulnerabilities: 108                               ║
+║ Critical: 0                                                  ║
+║ High: 0                                                      ║
+║ Medium: 108                                                  ║
+╚════════════════════════════════════════════════════════════════╝
+
+
+[MEDIUM] 🟡 ⚠️  REACHABLE (77% confidence)
+Package: axios
+Vulnerability: GHSA-cph5-m8f7-6c5x
+CVSS: 5 (MEDIUM)
+Description: GHSA-cph5-m8f7-6c5x
+Location: axios::default
+
+Reachable Path:
+  C:\Users\cczin\appservice-scan\examples\vulnerable-test-app\server.js
+    → axios (imported)
+────────────────────────────────────────────────────────────────
+
+[MEDIUM] 🟡 ⚠️  REACHABLE (77% confidence)
+Package: axios
+Vulnerability: GHSA-jr5f-v2jv-69x6
+CVSS: 5 (MEDIUM)
+Description: GHSA-jr5f-v2jv-69x6
+Location: axios::default
+
+Reachable Path:
+  C:\Users\cczin\appservice-scan\examples\vulnerable-test-app\server.js
+    → axios (imported)
+────────────────────────────────────────────────────────────────
+
+[MEDIUM] 🟡 ⚠️  REACHABLE (77% confidence)
+Package: axios
+Vulnerability: GHSA-wf5p-g6vw-rhxx
+CVSS: 5 (MEDIUM)
+Description: GHSA-wf5p-g6vw-rhxx
+Location: axios::default
+
+Reachable Path:
+  C:\Users\cczin\appservice-scan\examples\vulnerable-test-app\server.js
+    → axios (imported)
+────────────────────────────────────────────────────────────────
+
+[MEDIUM] 🟡 ⚠️  REACHABLE (77% confidence)
+Package: axios
+Vulnerability: GHSA-cph5-m8f7-6c5x
+CVSS: 5 (MEDIUM)
+Description: GHSA-cph5-m8f7-6c5x
+Location: axios::default
+
+Reachable Path:
+  C:\Users\cczin\appservice-scan\examples\vulnerable-test-app\server.js
+    → axios (imported)
+────────────────────────────────────────────────────────────────
+
+[MEDIUM] 🟡 ⚠️  REACHABLE (77% confidence)
+Package: axios
+Vulnerability: GHSA-jr5f-v2jv-69x6
+CVSS: 5 (MEDIUM)
+Description: GHSA-jr5f-v2jv-69x6
+Location: axios::default
+
+Reachable Path:
+  C:\Users\cczin\appservice-scan\examples\vulnerable-test-app\server.js
+    → axios (imported)
+────────────────────────────────────────────────────────────────
+
+[MEDIUM] 🟡 ⚠️  REACHABLE (77% confidence)
+Package: axios
+Vulnerability: GHSA-wf5p-g6vw-rhxx
+CVSS: 5 (MEDIUM)
+Description: GHSA-wf5p-g6vw-rhxx
+Location: axios::default
+
+Reachable Path:
+  C:\Users\cczin\appservice-scan\examples\vulnerable-test-app\server.js
+    → axios (imported)
+────────────────────────────────────────────────────────────────
+
+[MEDIUM] 🟡 ⚠️  REACHABLE (77% confidence)
+Package: axios
+Vulnerability: GHSA-cph5-m8f7-6c5x
+CVSS: 5 (MEDIUM)
+Description: GHSA-cph5-m8f7-6c5x
+Location: axios::default
+
+Reachable Path:
+  C:\Users\cczin\appservice-scan\examples\vulnerable-test-app\server.js
+    → axios (imported)
+────────────────────────────────────────────────────────────────
+
+[MEDIUM] 🟡 ⚠️  REACHABLE (77% confidence)
+Package: axios
+Vulnerability: GHSA-jr5f-v2jv-69x6
+CVSS: 5 (MEDIUM)
+Description: GHSA-jr5f-v2jv-69x6
+Location: axios::default
+
+Reachable Path:
+  C:\Users\cczin\appservice-scan\examples\vulnerable-test-app\server.js
+    → axios (imported)
+────────────────────────────────────────────────────────────────
+
+[MEDIUM] 🟡 ⚠️  REACHABLE (77% confidence)
+Package: axios
+Vulnerability: GHSA-wf5p-g6vw-rhxx
+CVSS: 5 (MEDIUM)
+Description: GHSA-wf5p-g6vw-rhxx
+Location: axios::default
+
+Reachable Path:
+  C:\Users\cczin\appservice-scan\examples\vulnerable-test-app\server.js
+    → axios (imported)
+────────────────────────────────────────────────────────────────
+
+[MEDIUM] 🟡 ⚠️  REACHABLE (77% confidence)
+Package: axios
+Vulnerability: GHSA-cph5-m8f7-6c5x
+CVSS: 5 (MEDIUM)
+Description: GHSA-cph5-m8f7-6c5x
+Location: axios::default
+
+Reachable Path:
+  C:\Users\cczin\appservice-scan\examples\vulnerable-test-app\server.js
+    → axios (imported)
+────────────────────────────────────────────────────────────────
+
+[MEDIUM] 🟡 ⚠️  REACHABLE (77% confidence)
+Package: axios
+Vulnerability: GHSA-jr5f-v2jv-69x6
+CVSS: 5 (MEDIUM)
+Description: GHSA-jr5f-v2jv-69x6
+Location: axios::default
+
+Reachable Path:
+  C:\Users\cczin\appservice-scan\examples\vulnerable-test-app\server.js
+    → axios (imported)
+────────────────────────────────────────────────────────────────
+
+[MEDIUM] 🟡 ⚠️  REACHABLE (77% confidence)
+Package: axios
+Vulnerability: GHSA-wf5p-g6vw-rhxx
+CVSS: 5 (MEDIUM)
+Description: GHSA-wf5p-g6vw-rhxx
+Location: axios::default
+
+Reachable Path:
+  C:\Users\cczin\appservice-scan\examples\vulnerable-test-app\server.js
+    → axios (imported)
+────────────────────────────────────────────────────────────────
+
+[MEDIUM] 🟡 ⚠️  REACHABLE (77% confidence)
+Package: express
+Vulnerability: GHSA-qw6h-vgh9-j6wx
+CVSS: 5 (MEDIUM)
+Description: GHSA-qw6h-vgh9-j6wx
+Location: express::default
+
+Reachable Path:
+  C:\Users\cczin\appservice-scan\examples\vulnerable-test-app\server.js
+    → express (imported)
+────────────────────────────────────────────────────────────────
+
+[MEDIUM] 🟡 ⚠️  REACHABLE (77% confidence)
+Package: express
+Vulnerability: GHSA-rv95-896h-c2vc
+CVSS: 5 (MEDIUM)
+Description: GHSA-rv95-896h-c2vc
+Location: express::default
+
+Reachable Path:
+  C:\Users\cczin\appservice-scan\examples\vulnerable-test-app\server.js
+    → express (imported)
+────────────────────────────────────────────────────────────────
+
+[MEDIUM] 🟡 ⚠️  REACHABLE (77% confidence)
+Package: express
+Vulnerability: GHSA-qw6h-vgh9-j6wx
+CVSS: 5 (MEDIUM)
+Description: GHSA-qw6h-vgh9-j6wx
+Location: express::default
+
+Reachable Path:
+  C:\Users\cczin\appservice-scan\examples\vulnerable-test-app\server.js
+    → express (imported)
+────────────────────────────────────────────────────────────────
+
+[MEDIUM] 🟡 ⚠️  REACHABLE (77% confidence)
+Package: express
+Vulnerability: GHSA-rv95-896h-c2vc
+CVSS: 5 (MEDIUM)
+Description: GHSA-rv95-896h-c2vc
+Location: express::default
+
+Reachable Path:
+  C:\Users\cczin\appservice-scan\examples\vulnerable-test-app\server.js
+    → express (imported)
+────────────────────────────────────────────────────────────────
+
+[MEDIUM] 🟡 ⚠️  REACHABLE (77% confidence)
+Package: express
+Vulnerability: GHSA-qw6h-vgh9-j6wx
+CVSS: 5 (MEDIUM)
+Description: GHSA-qw6h-vgh9-j6wx
+Location: express::default
+
+Reachable Path:
+  C:\Users\cczin\appservice-scan\examples\vulnerable-test-app\server.js
+    → express (imported)
+────────────────────────────────────────────────────────────────
+
+[MEDIUM] 🟡 ⚠️  REACHABLE (77% confidence)
+Package: express
+Vulnerability: GHSA-rv95-896h-c2vc
+CVSS: 5 (MEDIUM)
+Description: GHSA-rv95-896h-c2vc
+Location: express::default
+
+Reachable Path:
+  C:\Users\cczin\appservice-scan\examples\vulnerable-test-app\server.js
+    → express (imported)
+────────────────────────────────────────────────────────────────
+
+[MEDIUM] 🟡 ⚠️  REACHABLE (77% confidence)
+Package: express
+Vulnerability: GHSA-qw6h-vgh9-j6wx
+CVSS: 5 (MEDIUM)
+Description: GHSA-qw6h-vgh9-j6wx
+Location: express::default
+
+Reachable Path:
+  C:\Users\cczin\appservice-scan\examples\vulnerable-test-app\server.js
+    → express (imported)
+────────────────────────────────────────────────────────────────
+
+[MEDIUM] 🟡 ⚠️  REACHABLE (77% confidence)
+Package: express
+Vulnerability: GHSA-rv95-896h-c2vc
+CVSS: 5 (MEDIUM)
+Description: GHSA-rv95-896h-c2vc
+Location: express::default
+
+Reachable Path:
+  C:\Users\cczin\appservice-scan\examples\vulnerable-test-app\server.js
+    → express (imported)
+────────────────────────────────────────────────────────────────
+
+[MEDIUM] 🟡 ⚠️  REACHABLE (77% confidence)
+Package: jsonwebtoken
+Vulnerability: GHSA-8cf7-32gw-wr33
+CVSS: 5 (MEDIUM)
+Description: GHSA-8cf7-32gw-wr33
+Location: jsonwebtoken::default
+
+Reachable Path:
+  C:\Users\cczin\appservice-scan\examples\vulnerable-test-app\middleware\auth.js
+    → jsonwebtoken (imported)
+────────────────────────────────────────────────────────────────
+
+[MEDIUM] 🟡 ⚠️  REACHABLE (77% confidence)
+Package: jsonwebtoken
+Vulnerability: GHSA-hjrf-2m68-5959
+CVSS: 5 (MEDIUM)
+Description: GHSA-hjrf-2m68-5959
+Location: jsonwebtoken::default
+
+Reachable Path:
+  C:\Users\cczin\appservice-scan\examples\vulnerable-test-app\middleware\auth.js
+    → jsonwebtoken (imported)
+────────────────────────────────────────────────────────────────
+
+[MEDIUM] 🟡 ⚠️  REACHABLE (77% confidence)
+Package: jsonwebtoken
+Vulnerability: GHSA-qwph-4952-7xr6
+CVSS: 5 (MEDIUM)
+Description: GHSA-qwph-4952-7xr6
+Location: jsonwebtoken::default
+
+Reachable Path:
+  C:\Users\cczin\appservice-scan\examples\vulnerable-test-app\middleware\auth.js
+    → jsonwebtoken (imported)
+────────────────────────────────────────────────────────────────
+
+[MEDIUM] 🟡 ⚠️  REACHABLE (77% confidence)
+Package: jsonwebtoken
+Vulnerability: GHSA-8cf7-32gw-wr33
+CVSS: 5 (MEDIUM)
+Description: GHSA-8cf7-32gw-wr33
+Location: jsonwebtoken::default
+
+Reachable Path:
+  C:\Users\cczin\appservice-scan\examples\vulnerable-test-app\middleware\auth.js
+    → jsonwebtoken (imported)
+────────────────────────────────────────────────────────────────
+
+[MEDIUM] 🟡 ⚠️  REACHABLE (77% confidence)
+Package: jsonwebtoken
+Vulnerability: GHSA-hjrf-2m68-5959
+CVSS: 5 (MEDIUM)
+Description: GHSA-hjrf-2m68-5959
+Location: jsonwebtoken::default
+
+Reachable Path:
+  C:\Users\cczin\appservice-scan\examples\vulnerable-test-app\middleware\auth.js
+    → jsonwebtoken (imported)
+────────────────────────────────────────────────────────────────
+
+[MEDIUM] 🟡 ⚠️  REACHABLE (77% confidence)
+Package: jsonwebtoken
+Vulnerability: GHSA-qwph-4952-7xr6
+CVSS: 5 (MEDIUM)
+Description: GHSA-qwph-4952-7xr6
+Location: jsonwebtoken::default
+
+Reachable Path:
+  C:\Users\cczin\appservice-scan\examples\vulnerable-test-app\middleware\auth.js
+    → jsonwebtoken (imported)
+────────────────────────────────────────────────────────────────
+
+[MEDIUM] 🟡 ⚠️  REACHABLE (77% confidence)
+Package: jsonwebtoken
+Vulnerability: GHSA-8cf7-32gw-wr33
+CVSS: 5 (MEDIUM)
+Description: GHSA-8cf7-32gw-wr33
+Location: jsonwebtoken::default
+
+Reachable Path:
+  C:\Users\cczin\appservice-scan\examples\vulnerable-test-app\middleware\auth.js
+    → jsonwebtoken (imported)
+────────────────────────────────────────────────────────────────
+
+[MEDIUM] 🟡 ⚠️  REACHABLE (77% confidence)
+Package: jsonwebtoken
+Vulnerability: GHSA-c7hr-j4mj-j2w6
+CVSS: 5 (MEDIUM)
+Description: GHSA-c7hr-j4mj-j2w6
+Location: jsonwebtoken::default
+
+Reachable Path:
+  C:\Users\cczin\appservice-scan\examples\vulnerable-test-app\middleware\auth.js
+    → jsonwebtoken (imported)
+────────────────────────────────────────────────────────────────
+
+[MEDIUM] 🟡 ⚠️  REACHABLE (77% confidence)
+Package: jsonwebtoken
+Vulnerability: GHSA-hjrf-2m68-5959
+CVSS: 5 (MEDIUM)
+Description: GHSA-hjrf-2m68-5959
+Location: jsonwebtoken::default
+
+Reachable Path:
+  C:\Users\cczin\appservice-scan\examples\vulnerable-test-app\middleware\auth.js
+    → jsonwebtoken (imported)
+────────────────────────────────────────────────────────────────
+
+[MEDIUM] 🟡 ⚠️  REACHABLE (77% confidence)
+Package: jsonwebtoken
+Vulnerability: GHSA-qwph-4952-7xr6
+CVSS: 5 (MEDIUM)
+Description: GHSA-qwph-4952-7xr6
+Location: jsonwebtoken::default
+
+Reachable Path:
+  C:\Users\cczin\appservice-scan\examples\vulnerable-test-app\middleware\auth.js
+    → jsonwebtoken (imported)
+────────────────────────────────────────────────────────────────
+
+[MEDIUM] 🟡 ⚠️  REACHABLE (77% confidence)
+Package: jsonwebtoken
+Vulnerability: GHSA-8cf7-32gw-wr33
+CVSS: 5 (MEDIUM)
+Description: GHSA-8cf7-32gw-wr33
+Location: jsonwebtoken::default
+
+Reachable Path:
+  C:\Users\cczin\appservice-scan\examples\vulnerable-test-app\middleware\auth.js
+    → jsonwebtoken (imported)
+────────────────────────────────────────────────────────────────
+
+[MEDIUM] 🟡 ⚠️  REACHABLE (77% confidence)
+Package: jsonwebtoken
+Vulnerability: GHSA-c7hr-j4mj-j2w6
+CVSS: 5 (MEDIUM)
+Description: GHSA-c7hr-j4mj-j2w6
+Location: jsonwebtoken::default
+
+Reachable Path:
+  C:\Users\cczin\appservice-scan\examples\vulnerable-test-app\middleware\auth.js
+    → jsonwebtoken (imported)
+────────────────────────────────────────────────────────────────
+
+[MEDIUM] 🟡 ⚠️  REACHABLE (77% confidence)
+Package: jsonwebtoken
+Vulnerability: GHSA-hjrf-2m68-5959
+CVSS: 5 (MEDIUM)
+Description: GHSA-hjrf-2m68-5959
+Location: jsonwebtoken::default
+
+Reachable Path:
+  C:\Users\cczin\appservice-scan\examples\vulnerable-test-app\middleware\auth.js
+    → jsonwebtoken (imported)
+────────────────────────────────────────────────────────────────
+
+[MEDIUM] 🟡 ⚠️  REACHABLE (77% confidence)
+Package: jsonwebtoken
+Vulnerability: GHSA-qwph-4952-7xr6
+CVSS: 5 (MEDIUM)
+Description: GHSA-qwph-4952-7xr6
+Location: jsonwebtoken::default
+
+Reachable Path:
+  C:\Users\cczin\appservice-scan\examples\vulnerable-test-app\middleware\auth.js
+    → jsonwebtoken (imported)
+────────────────────────────────────────────────────────────────
+
+[MEDIUM] 🟡 ⚠️  REACHABLE (77% confidence)
+Package: jsonwebtoken
+Vulnerability: GHSA-8cf7-32gw-wr33
+CVSS: 5 (MEDIUM)
+Description: GHSA-8cf7-32gw-wr33
+Location: jsonwebtoken::default
+
+Reachable Path:
+  C:\Users\cczin\appservice-scan\examples\vulnerable-test-app\middleware\auth.js
+    → jsonwebtoken (imported)
+────────────────────────────────────────────────────────────────
+
+[MEDIUM] 🟡 ⚠️  REACHABLE (77% confidence)
+Package: jsonwebtoken
+Vulnerability: GHSA-hjrf-2m68-5959
+CVSS: 5 (MEDIUM)
+Description: GHSA-hjrf-2m68-5959
+Location: jsonwebtoken::default
+
+Reachable Path:
+  C:\Users\cczin\appservice-scan\examples\vulnerable-test-app\middleware\auth.js
+    → jsonwebtoken (imported)
+────────────────────────────────────────────────────────────────
+
+[MEDIUM] 🟡 ⚠️  REACHABLE (77% confidence)
+Package: jsonwebtoken
+Vulnerability: GHSA-qwph-4952-7xr6
+CVSS: 5 (MEDIUM)
+Description: GHSA-qwph-4952-7xr6
+Location: jsonwebtoken::default
+
+Reachable Path:
+  C:\Users\cczin\appservice-scan\examples\vulnerable-test-app\middleware\auth.js
+    → jsonwebtoken (imported)
+────────────────────────────────────────────────────────────────
+
+[MEDIUM] 🟡 ⚠️  REACHABLE (77% confidence)
+Package: jsonwebtoken
+Vulnerability: GHSA-8cf7-32gw-wr33
+CVSS: 5 (MEDIUM)
+Description: GHSA-8cf7-32gw-wr33
+Location: jsonwebtoken::default
+
+Reachable Path:
+  C:\Users\cczin\appservice-scan\examples\vulnerable-test-app\middleware\auth.js
+    → jsonwebtoken (imported)
+────────────────────────────────────────────────────────────────
+
+[MEDIUM] 🟡 ⚠️  REACHABLE (77% confidence)
+Package: jsonwebtoken
+Vulnerability: GHSA-hjrf-2m68-5959
+CVSS: 5 (MEDIUM)
+Description: GHSA-hjrf-2m68-5959
+Location: jsonwebtoken::default
+
+Reachable Path:
+  C:\Users\cczin\appservice-scan\examples\vulnerable-test-app\middleware\auth.js
+    → jsonwebtoken (imported)
+────────────────────────────────────────────────────────────────
+
+[MEDIUM] 🟡 ⚠️  REACHABLE (77% confidence)
+Package: jsonwebtoken
+Vulnerability: GHSA-qwph-4952-7xr6
+CVSS: 5 (MEDIUM)
+Description: GHSA-qwph-4952-7xr6
+Location: jsonwebtoken::default
+
+Reachable Path:
+  C:\Users\cczin\appservice-scan\examples\vulnerable-test-app\middleware\auth.js
+    → jsonwebtoken (imported)
+────────────────────────────────────────────────────────────────
+
+[MEDIUM] 🟡 ⚠️  REACHABLE (77% confidence)
+Package: jsonwebtoken
+Vulnerability: GHSA-8cf7-32gw-wr33
+CVSS: 5 (MEDIUM)
+Description: GHSA-8cf7-32gw-wr33
+Location: jsonwebtoken::default
+
+Reachable Path:
+  C:\Users\cczin\appservice-scan\examples\vulnerable-test-app\middleware\auth.js
+    → jsonwebtoken (imported)
+────────────────────────────────────────────────────────────────
+
+[MEDIUM] 🟡 ⚠️  REACHABLE (77% confidence)
+Package: jsonwebtoken
+Vulnerability: GHSA-hjrf-2m68-5959
+CVSS: 5 (MEDIUM)
+Description: GHSA-hjrf-2m68-5959
+Location: jsonwebtoken::default
+
+Reachable Path:
+  C:\Users\cczin\appservice-scan\examples\vulnerable-test-app\middleware\auth.js
+    → jsonwebtoken (imported)
+────────────────────────────────────────────────────────────────
+
+[MEDIUM] 🟡 ⚠️  REACHABLE (77% confidence)
+Package: jsonwebtoken
+Vulnerability: GHSA-qwph-4952-7xr6
+CVSS: 5 (MEDIUM)
+Description: GHSA-qwph-4952-7xr6
+Location: jsonwebtoken::default
+
+Reachable Path:
+  C:\Users\cczin\appservice-scan\examples\vulnerable-test-app\middleware\auth.js
+    → jsonwebtoken (imported)
+────────────────────────────────────────────────────────────────
+
+[MEDIUM] 🟡 ⚠️  REACHABLE (77% confidence)
+Package: jsonwebtoken
+Vulnerability: GHSA-8cf7-32gw-wr33
+CVSS: 5 (MEDIUM)
+Description: GHSA-8cf7-32gw-wr33
+Location: jsonwebtoken::default
+
+Reachable Path:
+  C:\Users\cczin\appservice-scan\examples\vulnerable-test-app\middleware\auth.js
+    → jsonwebtoken (imported)
+────────────────────────────────────────────────────────────────
+
+[MEDIUM] 🟡 ⚠️  REACHABLE (77% confidence)
+Package: jsonwebtoken
+Vulnerability: GHSA-hjrf-2m68-5959
+CVSS: 5 (MEDIUM)
+Description: GHSA-hjrf-2m68-5959
+Location: jsonwebtoken::default
+
+Reachable Path:
+  C:\Users\cczin\appservice-scan\examples\vulnerable-test-app\middleware\auth.js
+    → jsonwebtoken (imported)
+────────────────────────────────────────────────────────────────
+
+[MEDIUM] 🟡 ⚠️  REACHABLE (77% confidence)
+Package: jsonwebtoken
+Vulnerability: GHSA-qwph-4952-7xr6
+CVSS: 5 (MEDIUM)
+Description: GHSA-qwph-4952-7xr6
+Location: jsonwebtoken::default
+
+Reachable Path:
+  C:\Users\cczin\appservice-scan\examples\vulnerable-test-app\middleware\auth.js
+    → jsonwebtoken (imported)
+────────────────────────────────────────────────────────────────
+
+[MEDIUM] 🟡 ⚠️  REACHABLE (77% confidence)
+Package: jsonwebtoken
+Vulnerability: GHSA-8cf7-32gw-wr33
+CVSS: 5 (MEDIUM)
+Description: GHSA-8cf7-32gw-wr33
+Location: jsonwebtoken::default
+
+Reachable Path:
+  C:\Users\cczin\appservice-scan\examples\vulnerable-test-app\middleware\auth.js
+    → jsonwebtoken (imported)
+────────────────────────────────────────────────────────────────
+
+[MEDIUM] 🟡 ⚠️  REACHABLE (77% confidence)
+Package: jsonwebtoken
+Vulnerability: GHSA-c7hr-j4mj-j2w6
+CVSS: 5 (MEDIUM)
+Description: GHSA-c7hr-j4mj-j2w6
+Location: jsonwebtoken::default
+
+Reachable Path:
+  C:\Users\cczin\appservice-scan\examples\vulnerable-test-app\middleware\auth.js
+    → jsonwebtoken (imported)
+────────────────────────────────────────────────────────────────
+
+[MEDIUM] 🟡 ⚠️  REACHABLE (77% confidence)
+Package: jsonwebtoken
+Vulnerability: GHSA-hjrf-2m68-5959
+CVSS: 5 (MEDIUM)
+Description: GHSA-hjrf-2m68-5959
+Location: jsonwebtoken::default
+
+Reachable Path:
+  C:\Users\cczin\appservice-scan\examples\vulnerable-test-app\middleware\auth.js
+    → jsonwebtoken (imported)
+────────────────────────────────────────────────────────────────
+
+[MEDIUM] 🟡 ⚠️  REACHABLE (77% confidence)
+Package: jsonwebtoken
+Vulnerability: GHSA-qwph-4952-7xr6
+CVSS: 5 (MEDIUM)
+Description: GHSA-qwph-4952-7xr6
+Location: jsonwebtoken::default
+
+Reachable Path:
+  C:\Users\cczin\appservice-scan\examples\vulnerable-test-app\middleware\auth.js
+    → jsonwebtoken (imported)
+────────────────────────────────────────────────────────────────
+
+[MEDIUM] 🟡 ⚠️  REACHABLE (77% confidence)
+Package: jsonwebtoken
+Vulnerability: GHSA-8cf7-32gw-wr33
+CVSS: 5 (MEDIUM)
+Description: GHSA-8cf7-32gw-wr33
+Location: jsonwebtoken::default
+
+Reachable Path:
+  C:\Users\cczin\appservice-scan\examples\vulnerable-test-app\middleware\auth.js
+    → jsonwebtoken (imported)
+────────────────────────────────────────────────────────────────
+
+[MEDIUM] 🟡 ⚠️  REACHABLE (77% confidence)
+Package: jsonwebtoken
+Vulnerability: GHSA-c7hr-j4mj-j2w6
+CVSS: 5 (MEDIUM)
+Description: GHSA-c7hr-j4mj-j2w6
+Location: jsonwebtoken::default
+
+Reachable Path:
+  C:\Users\cczin\appservice-scan\examples\vulnerable-test-app\middleware\auth.js
+    → jsonwebtoken (imported)
+────────────────────────────────────────────────────────────────
+
+[MEDIUM] 🟡 ⚠️  REACHABLE (77% confidence)
+Package: jsonwebtoken
+Vulnerability: GHSA-hjrf-2m68-5959
+CVSS: 5 (MEDIUM)
+Description: GHSA-hjrf-2m68-5959
+Location: jsonwebtoken::default
+
+Reachable Path:
+  C:\Users\cczin\appservice-scan\examples\vulnerable-test-app\middleware\auth.js
+    → jsonwebtoken (imported)
+────────────────────────────────────────────────────────────────
+
+[MEDIUM] 🟡 ⚠️  REACHABLE (77% confidence)
+Package: jsonwebtoken
+Vulnerability: GHSA-qwph-4952-7xr6
+CVSS: 5 (MEDIUM)
+Description: GHSA-qwph-4952-7xr6
+Location: jsonwebtoken::default
+
+Reachable Path:
+  C:\Users\cczin\appservice-scan\examples\vulnerable-test-app\middleware\auth.js
+    → jsonwebtoken (imported)
+────────────────────────────────────────────────────────────────
+
+[MEDIUM] 🟡 ⚠️  REACHABLE (77% confidence)
+Package: jsonwebtoken
+Vulnerability: GHSA-8cf7-32gw-wr33
+CVSS: 5 (MEDIUM)
+Description: GHSA-8cf7-32gw-wr33
+Location: jsonwebtoken::default
+
+Reachable Path:
+  C:\Users\cczin\appservice-scan\examples\vulnerable-test-app\middleware\auth.js
+    → jsonwebtoken (imported)
+────────────────────────────────────────────────────────────────
+
+[MEDIUM] 🟡 ⚠️  REACHABLE (77% confidence)
+Package: jsonwebtoken
+Vulnerability: GHSA-hjrf-2m68-5959
+CVSS: 5 (MEDIUM)
+Description: GHSA-hjrf-2m68-5959
+Location: jsonwebtoken::default
+
+Reachable Path:
+  C:\Users\cczin\appservice-scan\examples\vulnerable-test-app\middleware\auth.js
+    → jsonwebtoken (imported)
+────────────────────────────────────────────────────────────────
+
+[MEDIUM] 🟡 ⚠️  REACHABLE (77% confidence)
+Package: jsonwebtoken
+Vulnerability: GHSA-qwph-4952-7xr6
+CVSS: 5 (MEDIUM)
+Description: GHSA-qwph-4952-7xr6
+Location: jsonwebtoken::default
+
+Reachable Path:
+  C:\Users\cczin\appservice-scan\examples\vulnerable-test-app\middleware\auth.js
+    → jsonwebtoken (imported)
+────────────────────────────────────────────────────────────────
+
+[MEDIUM] 🟡 ⚠️  REACHABLE (77% confidence)
+Package: jsonwebtoken
+Vulnerability: GHSA-8cf7-32gw-wr33
+CVSS: 5 (MEDIUM)
+Description: GHSA-8cf7-32gw-wr33
+Location: jsonwebtoken::default
+
+Reachable Path:
+  C:\Users\cczin\appservice-scan\examples\vulnerable-test-app\middleware\auth.js
+    → jsonwebtoken (imported)
+────────────────────────────────────────────────────────────────
+
+[MEDIUM] 🟡 ⚠️  REACHABLE (77% confidence)
+Package: jsonwebtoken
+Vulnerability: GHSA-hjrf-2m68-5959
+CVSS: 5 (MEDIUM)
+Description: GHSA-hjrf-2m68-5959
+Location: jsonwebtoken::default
+
+Reachable Path:
+  C:\Users\cczin\appservice-scan\examples\vulnerable-test-app\middleware\auth.js
+    → jsonwebtoken (imported)
+────────────────────────────────────────────────────────────────
+
+[MEDIUM] 🟡 ⚠️  REACHABLE (77% confidence)
+Package: jsonwebtoken
+Vulnerability: GHSA-qwph-4952-7xr6
+CVSS: 5 (MEDIUM)
+Description: GHSA-qwph-4952-7xr6
+Location: jsonwebtoken::default
+
+Reachable Path:
+  C:\Users\cczin\appservice-scan\examples\vulnerable-test-app\middleware\auth.js
+    → jsonwebtoken (imported)
+────────────────────────────────────────────────────────────────
+
+[MEDIUM] 🟡 ⚠️  REACHABLE (77% confidence)
+Package: lodash
+Vulnerability: GHSA-29mw-wpgm-hmr9
+CVSS: 5 (MEDIUM)
+Description: GHSA-29mw-wpgm-hmr9
+Location: lodash::default
+
+Reachable Path:
+  C:\Users\cczin\appservice-scan\examples\vulnerable-test-app\config\dev-config.js
+    → lodash (imported)
+────────────────────────────────────────────────────────────────
+
+[MEDIUM] 🟡 ⚠️  REACHABLE (77% confidence)
+Package: lodash
+Vulnerability: GHSA-35jh-r3h4-6jhm
+CVSS: 5 (MEDIUM)
+Description: GHSA-35jh-r3h4-6jhm
+Location: lodash::default
+
+Reachable Path:
+  C:\Users\cczin\appservice-scan\examples\vulnerable-test-app\config\dev-config.js
+    → lodash (imported)
+────────────────────────────────────────────────────────────────
+
+[MEDIUM] 🟡 ⚠️  REACHABLE (77% confidence)
+Package: lodash
+Vulnerability: GHSA-xxjr-mmjv-4gpg
+CVSS: 5 (MEDIUM)
+Description: GHSA-xxjr-mmjv-4gpg
+Location: lodash::default
+
+Reachable Path:
+  C:\Users\cczin\appservice-scan\examples\vulnerable-test-app\config\dev-config.js
+    → lodash (imported)
+────────────────────────────────────────────────────────────────
+
+[MEDIUM] 🟡 ⚠️  REACHABLE (77% confidence)
+Package: lodash
+Vulnerability: GHSA-29mw-wpgm-hmr9
+CVSS: 5 (MEDIUM)
+Description: GHSA-29mw-wpgm-hmr9
+Location: lodash::default
+
+Reachable Path:
+  C:\Users\cczin\appservice-scan\examples\vulnerable-test-app\config\dev-config.js
+    → lodash (imported)
+────────────────────────────────────────────────────────────────
+
+[MEDIUM] 🟡 ⚠️  REACHABLE (77% confidence)
+Package: lodash
+Vulnerability: GHSA-35jh-r3h4-6jhm
+CVSS: 5 (MEDIUM)
+Description: GHSA-35jh-r3h4-6jhm
+Location: lodash::default
+
+Reachable Path:
+  C:\Users\cczin\appservice-scan\examples\vulnerable-test-app\config\dev-config.js
+    → lodash (imported)
+────────────────────────────────────────────────────────────────
+
+[MEDIUM] 🟡 ⚠️  REACHABLE (77% confidence)
+Package: lodash
+Vulnerability: GHSA-xxjr-mmjv-4gpg
+CVSS: 5 (MEDIUM)
+Description: GHSA-xxjr-mmjv-4gpg
+Location: lodash::default
+
+Reachable Path:
+  C:\Users\cczin\appservice-scan\examples\vulnerable-test-app\config\dev-config.js
+    → lodash (imported)
+────────────────────────────────────────────────────────────────
+
+[MEDIUM] 🟡 ⚠️  REACHABLE (77% confidence)
+Package: lodash
+Vulnerability: GHSA-29mw-wpgm-hmr9
+CVSS: 5 (MEDIUM)
+Description: GHSA-29mw-wpgm-hmr9
+Location: lodash::default
+
+Reachable Path:
+  C:\Users\cczin\appservice-scan\examples\vulnerable-test-app\config\dev-config.js
+    → lodash (imported)
+────────────────────────────────────────────────────────────────
+
+[MEDIUM] 🟡 ⚠️  REACHABLE (77% confidence)
+Package: lodash
+Vulnerability: GHSA-35jh-r3h4-6jhm
+CVSS: 5 (MEDIUM)
+Description: GHSA-35jh-r3h4-6jhm
+Location: lodash::default
+
+Reachable Path:
+  C:\Users\cczin\appservice-scan\examples\vulnerable-test-app\config\dev-config.js
+    → lodash (imported)
+────────────────────────────────────────────────────────────────
+
+[MEDIUM] 🟡 ⚠️  REACHABLE (77% confidence)
+Package: lodash
+Vulnerability: GHSA-xxjr-mmjv-4gpg
+CVSS: 5 (MEDIUM)
+Description: GHSA-xxjr-mmjv-4gpg
+Location: lodash::default
+
+Reachable Path:
+  C:\Users\cczin\appservice-scan\examples\vulnerable-test-app\config\dev-config.js
+    → lodash (imported)
+────────────────────────────────────────────────────────────────
+
+[MEDIUM] 🟡 ⚠️  REACHABLE (77% confidence)
+Package: lodash
+Vulnerability: GHSA-29mw-wpgm-hmr9
+CVSS: 5 (MEDIUM)
+Description: GHSA-29mw-wpgm-hmr9
+Location: lodash::default
+
+Reachable Path:
+  C:\Users\cczin\appservice-scan\examples\vulnerable-test-app\config\dev-config.js
+    → lodash (imported)
+────────────────────────────────────────────────────────────────
+
+[MEDIUM] 🟡 ⚠️  REACHABLE (77% confidence)
+Package: lodash
+Vulnerability: GHSA-35jh-r3h4-6jhm
+CVSS: 5 (MEDIUM)
+Description: GHSA-35jh-r3h4-6jhm
+Location: lodash::default
+
+Reachable Path:
+  C:\Users\cczin\appservice-scan\examples\vulnerable-test-app\config\dev-config.js
+    → lodash (imported)
+────────────────────────────────────────────────────────────────
+
+[MEDIUM] 🟡 ⚠️  REACHABLE (77% confidence)
+Package: lodash
+Vulnerability: GHSA-xxjr-mmjv-4gpg
+CVSS: 5 (MEDIUM)
+Description: GHSA-xxjr-mmjv-4gpg
+Location: lodash::default
+
+Reachable Path:
+  C:\Users\cczin\appservice-scan\examples\vulnerable-test-app\config\dev-config.js
+    → lodash (imported)
+────────────────────────────────────────────────────────────────
+
+[MEDIUM] 🟡 ⚠️  REACHABLE (77% confidence)
+Package: minimist
+Vulnerability: GHSA-xvch-5gv4-984h
+CVSS: 5 (MEDIUM)
+Description: GHSA-xvch-5gv4-984h
+Location: minimist::default
+
+Reachable Path:
+  C:\Users\cczin\appservice-scan\examples\vulnerable-test-app\utils\error-formatter.js
+    → minimist (imported)
+────────────────────────────────────────────────────────────────
+
+[MEDIUM] 🟡 ⚠️  REACHABLE (77% confidence)
+Package: minimist
+Vulnerability: GHSA-xvch-5gv4-984h
+CVSS: 5 (MEDIUM)
+Description: GHSA-xvch-5gv4-984h
+Location: minimist::default
+
+Reachable Path:
+  C:\Users\cczin\appservice-scan\examples\vulnerable-test-app\utils\error-formatter.js
+    → minimist (imported)
+────────────────────────────────────────────────────────────────
+
+[MEDIUM] 🟡 ⚠️  REACHABLE (77% confidence)
+Package: minimist
+Vulnerability: GHSA-xvch-5gv4-984h
+CVSS: 5 (MEDIUM)
+Description: GHSA-xvch-5gv4-984h
+Location: minimist::default
+
+Reachable Path:
+  C:\Users\cczin\appservice-scan\examples\vulnerable-test-app\utils\error-formatter.js
+    → minimist (imported)
+────────────────────────────────────────────────────────────────
+
+[MEDIUM] 🟡 ⚠️  REACHABLE (77% confidence)
+Package: minimist
+Vulnerability: GHSA-xvch-5gv4-984h
+CVSS: 5 (MEDIUM)
+Description: GHSA-xvch-5gv4-984h
+Location: minimist::default
+
+Reachable Path:
+  C:\Users\cczin\appservice-scan\examples\vulnerable-test-app\utils\error-formatter.js
+    → minimist (imported)
+────────────────────────────────────────────────────────────────
+
+[MEDIUM] 🟡 ⚠️  REACHABLE (77% confidence)
+Package: semver
+Vulnerability: GHSA-c2qf-rxjj-qqgw
+CVSS: 5 (MEDIUM)
+Description: GHSA-c2qf-rxjj-qqgw
+Location: semver::default
+
+Reachable Path:
+  C:\Users\cczin\appservice-scan\examples\vulnerable-test-app\utils\version-checker.js
+    → semver (imported)
+────────────────────────────────────────────────────────────────
+
+[MEDIUM] 🟡 ⚠️  REACHABLE (77% confidence)
+Package: semver
+Vulnerability: GHSA-c2qf-rxjj-qqgw
+CVSS: 5 (MEDIUM)
+Description: GHSA-c2qf-rxjj-qqgw
+Location: semver::default
+
+Reachable Path:
+  C:\Users\cczin\appservice-scan\examples\vulnerable-test-app\utils\version-checker.js
+    → semver (imported)
+────────────────────────────────────────────────────────────────
+
+[MEDIUM] 🟡 ⚠️  REACHABLE (77% confidence)
+Package: semver
+Vulnerability: GHSA-c2qf-rxjj-qqgw
+CVSS: 5 (MEDIUM)
+Description: GHSA-c2qf-rxjj-qqgw
+Location: semver::default
+
+Reachable Path:
+  C:\Users\cczin\appservice-scan\examples\vulnerable-test-app\utils\version-checker.js
+    → semver (imported)
+────────────────────────────────────────────────────────────────
+
+[MEDIUM] 🟡 ⚠️  REACHABLE (77% confidence)
+Package: semver
+Vulnerability: GHSA-c2qf-rxjj-qqgw
+CVSS: 5 (MEDIUM)
+Description: GHSA-c2qf-rxjj-qqgw
+Location: semver::default
+
+Reachable Path:
+  C:\Users\cczin\appservice-scan\examples\vulnerable-test-app\utils\version-checker.js
+    → semver (imported)
+────────────────────────────────────────────────────────────────
+
+[MEDIUM] 🟡 ⚠️  REACHABLE (77% confidence)
+Package: validator
+Vulnerability: GHSA-9965-vmph-33xx
+CVSS: 5 (MEDIUM)
+Description: GHSA-9965-vmph-33xx
+Location: validator::default
+
+Reachable Path:
+  C:\Users\cczin\appservice-scan\examples\vulnerable-test-app\processors\validator.js
+    → validator (imported)
+────────────────────────────────────────────────────────────────
+
+[MEDIUM] 🟡 ⚠️  REACHABLE (77% confidence)
+Package: validator
+Vulnerability: GHSA-qgmg-gppg-76g5
+CVSS: 5 (MEDIUM)
+Description: GHSA-qgmg-gppg-76g5
+Location: validator::default
+
+Reachable Path:
+  C:\Users\cczin\appservice-scan\examples\vulnerable-test-app\processors\validator.js
+    → validator (imported)
+────────────────────────────────────────────────────────────────
+
+[MEDIUM] 🟡 ⚠️  REACHABLE (77% confidence)
+Package: validator
+Vulnerability: GHSA-vghf-hv5q-vc2g
+CVSS: 5 (MEDIUM)
+Description: GHSA-vghf-hv5q-vc2g
+Location: validator::default
+
+Reachable Path:
+  C:\Users\cczin\appservice-scan\examples\vulnerable-test-app\processors\validator.js
+    → validator (imported)
+────────────────────────────────────────────────────────────────
+
+[MEDIUM] 🟡 ⚠️  REACHABLE (77% confidence)
+Package: validator
+Vulnerability: GHSA-xx4c-jj58-r7x6
+CVSS: 5 (MEDIUM)
+Description: GHSA-xx4c-jj58-r7x6
+Location: validator::default
+
+Reachable Path:
+  C:\Users\cczin\appservice-scan\examples\vulnerable-test-app\processors\validator.js
+    → validator (imported)
+────────────────────────────────────────────────────────────────
+
+[MEDIUM] 🟡 ⚠️  REACHABLE (77% confidence)
+Package: validator
+Vulnerability: GHSA-9965-vmph-33xx
+CVSS: 5 (MEDIUM)
+Description: GHSA-9965-vmph-33xx
+Location: validator::default
+
+Reachable Path:
+  C:\Users\cczin\appservice-scan\examples\vulnerable-test-app\processors\validator.js
+    → validator (imported)
+────────────────────────────────────────────────────────────────
+
+[MEDIUM] 🟡 ⚠️  REACHABLE (77% confidence)
+Package: validator
+Vulnerability: GHSA-qgmg-gppg-76g5
+CVSS: 5 (MEDIUM)
+Description: GHSA-qgmg-gppg-76g5
+Location: validator::default
+
+Reachable Path:
+  C:\Users\cczin\appservice-scan\examples\vulnerable-test-app\processors\validator.js
+    → validator (imported)
+────────────────────────────────────────────────────────────────
+
+[MEDIUM] 🟡 ⚠️  REACHABLE (77% confidence)
+Package: validator
+Vulnerability: GHSA-vghf-hv5q-vc2g
+CVSS: 5 (MEDIUM)
+Description: GHSA-vghf-hv5q-vc2g
+Location: validator::default
+
+Reachable Path:
+  C:\Users\cczin\appservice-scan\examples\vulnerable-test-app\processors\validator.js
+    → validator (imported)
+────────────────────────────────────────────────────────────────
+
+[MEDIUM] 🟡 ⚠️  REACHABLE (77% confidence)
+Package: validator
+Vulnerability: GHSA-xx4c-jj58-r7x6
+CVSS: 5 (MEDIUM)
+Description: GHSA-xx4c-jj58-r7x6
+Location: validator::default
+
+Reachable Path:
+  C:\Users\cczin\appservice-scan\examples\vulnerable-test-app\processors\validator.js
+    → validator (imported)
+────────────────────────────────────────────────────────────────
+
+[MEDIUM] 🟡 ⚠️  REACHABLE (77% confidence)
+Package: validator
+Vulnerability: GHSA-9965-vmph-33xx
+CVSS: 5 (MEDIUM)
+Description: GHSA-9965-vmph-33xx
+Location: validator::default
+
+Reachable Path:
+  C:\Users\cczin\appservice-scan\examples\vulnerable-test-app\processors\validator.js
+    → validator (imported)
+────────────────────────────────────────────────────────────────
+
+[MEDIUM] 🟡 ⚠️  REACHABLE (77% confidence)
+Package: validator
+Vulnerability: GHSA-qgmg-gppg-76g5
+CVSS: 5 (MEDIUM)
+Description: GHSA-qgmg-gppg-76g5
+Location: validator::default
+
+Reachable Path:
+  C:\Users\cczin\appservice-scan\examples\vulnerable-test-app\processors\validator.js
+    → validator (imported)
+────────────────────────────────────────────────────────────────
+
+[MEDIUM] 🟡 ⚠️  REACHABLE (77% confidence)
+Package: validator
+Vulnerability: GHSA-vghf-hv5q-vc2g
+CVSS: 5 (MEDIUM)
+Description: GHSA-vghf-hv5q-vc2g
+Location: validator::default
+
+Reachable Path:
+  C:\Users\cczin\appservice-scan\examples\vulnerable-test-app\processors\validator.js
+    → validator (imported)
+────────────────────────────────────────────────────────────────
+
+[MEDIUM] 🟡 ⚠️  REACHABLE (77% confidence)
+Package: validator
+Vulnerability: GHSA-xx4c-jj58-r7x6
+CVSS: 5 (MEDIUM)
+Description: GHSA-xx4c-jj58-r7x6
+Location: validator::default
+
+Reachable Path:
+  C:\Users\cczin\appservice-scan\examples\vulnerable-test-app\processors\validator.js
+    → validator (imported)
+────────────────────────────────────────────────────────────────
+
+[MEDIUM] 🟡 ⚠️  REACHABLE (77% confidence)
+Package: validator
+Vulnerability: GHSA-9965-vmph-33xx
+CVSS: 5 (MEDIUM)
+Description: GHSA-9965-vmph-33xx
+Location: validator::default
+
+Reachable Path:
+  C:\Users\cczin\appservice-scan\examples\vulnerable-test-app\processors\validator.js
+    → validator (imported)
+────────────────────────────────────────────────────────────────
+
+[MEDIUM] 🟡 ⚠️  REACHABLE (77% confidence)
+Package: validator
+Vulnerability: GHSA-qgmg-gppg-76g5
+CVSS: 5 (MEDIUM)
+Description: GHSA-qgmg-gppg-76g5
+Location: validator::default
+
+Reachable Path:
+  C:\Users\cczin\appservice-scan\examples\vulnerable-test-app\processors\validator.js
+    → validator (imported)
+────────────────────────────────────────────────────────────────
+
+[MEDIUM] 🟡 ⚠️  REACHABLE (77% confidence)
+Package: validator
+Vulnerability: GHSA-vghf-hv5q-vc2g
+CVSS: 5 (MEDIUM)
+Description: GHSA-vghf-hv5q-vc2g
+Location: validator::default
+
+Reachable Path:
+  C:\Users\cczin\appservice-scan\examples\vulnerable-test-app\processors\validator.js
+    → validator (imported)
+────────────────────────────────────────────────────────────────
+
+[MEDIUM] 🟡 ⚠️  REACHABLE (77% confidence)
+Package: validator
+Vulnerability: GHSA-xx4c-jj58-r7x6
+CVSS: 5 (MEDIUM)
+Description: GHSA-xx4c-jj58-r7x6
+Location: validator::default
+
+Reachable Path:
+  C:\Users\cczin\appservice-scan\examples\vulnerable-test-app\processors\validator.js
+    → validator (imported)
+────────────────────────────────────────────────────────────────
+
+[MEDIUM] 🟡 ⚠️  REACHABLE (77% confidence)
+Package: xml2js
+Vulnerability: GHSA-776f-qx25-q3cc
+CVSS: 5 (MEDIUM)
+Description: GHSA-776f-qx25-q3cc
+Location: xml2js::default
+
+Reachable Path:
+  C:\Users\cczin\appservice-scan\examples\vulnerable-test-app\parsers\xml-parser.js
+    → xml2js (imported)
+────────────────────────────────────────────────────────────────
+
+[MEDIUM] 🟡 ⚠️  REACHABLE (77% confidence)
+Package: xml2js
+Vulnerability: GHSA-776f-qx25-q3cc
+CVSS: 5 (MEDIUM)
+Description: GHSA-776f-qx25-q3cc
+Location: xml2js::default
+
+Reachable Path:
+  C:\Users\cczin\appservice-scan\examples\vulnerable-test-app\parsers\xml-parser.js
+    → xml2js (imported)
+────────────────────────────────────────────────────────────────
+
+[MEDIUM] 🟡 ⚠️  REACHABLE (77% confidence)
+Package: xml2js
+Vulnerability: GHSA-776f-qx25-q3cc
+CVSS: 5 (MEDIUM)
+Description: GHSA-776f-qx25-q3cc
+Location: xml2js::default
+
+Reachable Path:
+  C:\Users\cczin\appservice-scan\examples\vulnerable-test-app\parsers\xml-parser.js
+    → xml2js (imported)
+────────────────────────────────────────────────────────────────
+
+[MEDIUM] 🟡 ⚠️  REACHABLE (77% confidence)
+Package: xml2js
+Vulnerability: GHSA-776f-qx25-q3cc
+CVSS: 5 (MEDIUM)
+Description: GHSA-776f-qx25-q3cc
+Location: xml2js::default
+
+Reachable Path:
+  C:\Users\cczin\appservice-scan\examples\vulnerable-test-app\parsers\xml-parser.js
+    → xml2js (imported)
+────────────────────────────────────────────────────────────────
+
+[MEDIUM] 🟡 ⚠️  REACHABLE (75% confidence)
+Package: ejs
+Vulnerability: GHSA-ghr5-ch3p-vcr6
+CVSS: 5 (MEDIUM)
+Description: GHSA-ghr5-ch3p-vcr6
+Location: ejs::default
+
+Reachable Path:
+  C:\Users\cczin\appservice-scan\examples\vulnerable-test-app\handlers\html-handler.js
+    → ejs (imported)
+────────────────────────────────────────────────────────────────
+
+[MEDIUM] 🟡 ⚠️  REACHABLE (75% confidence)
+Package: ejs
+Vulnerability: GHSA-phwq-j96m-2c2q
+CVSS: 5 (MEDIUM)
+Description: GHSA-phwq-j96m-2c2q
+Location: ejs::default
+
+Reachable Path:
+  C:\Users\cczin\appservice-scan\examples\vulnerable-test-app\handlers\html-handler.js
+    → ejs (imported)
+────────────────────────────────────────────────────────────────
+
+[MEDIUM] 🟡 ⚠️  REACHABLE (75% confidence)
+Package: ejs
+Vulnerability: GHSA-ghr5-ch3p-vcr6
+CVSS: 5 (MEDIUM)
+Description: GHSA-ghr5-ch3p-vcr6
+Location: ejs::default
+
+Reachable Path:
+  C:\Users\cczin\appservice-scan\examples\vulnerable-test-app\handlers\html-handler.js
+    → ejs (imported)
+────────────────────────────────────────────────────────────────
+
+[MEDIUM] 🟡 ⚠️  REACHABLE (75% confidence)
+Package: ejs
+Vulnerability: GHSA-phwq-j96m-2c2q
+CVSS: 5 (MEDIUM)
+Description: GHSA-phwq-j96m-2c2q
+Location: ejs::default
+
+Reachable Path:
+  C:\Users\cczin\appservice-scan\examples\vulnerable-test-app\handlers\html-handler.js
+    → ejs (imported)
+────────────────────────────────────────────────────────────────
+
+[MEDIUM] 🟡 ⚠️  REACHABLE (75% confidence)
+Package: ejs
+Vulnerability: GHSA-ghr5-ch3p-vcr6
+CVSS: 5 (MEDIUM)
+Description: GHSA-ghr5-ch3p-vcr6
+Location: ejs::default
+
+Reachable Path:
+  C:\Users\cczin\appservice-scan\examples\vulnerable-test-app\handlers\html-handler.js
+    → ejs (imported)
+────────────────────────────────────────────────────────────────
+
+[MEDIUM] 🟡 ⚠️  REACHABLE (75% confidence)
+Package: ejs
+Vulnerability: GHSA-phwq-j96m-2c2q
+CVSS: 5 (MEDIUM)
+Description: GHSA-phwq-j96m-2c2q
+Location: ejs::default
+
+Reachable Path:
+  C:\Users\cczin\appservice-scan\examples\vulnerable-test-app\handlers\html-handler.js
+    → ejs (imported)
+────────────────────────────────────────────────────────────────
+
+[MEDIUM] 🟡 ⚠️  REACHABLE (75% confidence)
+Package: ejs
+Vulnerability: GHSA-ghr5-ch3p-vcr6
+CVSS: 5 (MEDIUM)
+Description: GHSA-ghr5-ch3p-vcr6
+Location: ejs::default
+
+Reachable Path:
+  C:\Users\cczin\appservice-scan\examples\vulnerable-test-app\handlers\html-handler.js
+    → ejs (imported)
+────────────────────────────────────────────────────────────────
+
+[MEDIUM] 🟡 ⚠️  REACHABLE (75% confidence)
+Package: ejs
+Vulnerability: GHSA-phwq-j96m-2c2q
+CVSS: 5 (MEDIUM)
+Description: GHSA-phwq-j96m-2c2q
+Location: ejs::default
+
+Reachable Path:
+  C:\Users\cczin\appservice-scan\examples\vulnerable-test-app\handlers\html-handler.js
+    → ejs (imported)
+────────────────────────────────────────────────────────────────
+
+⚠️ Found 108 reachable vulnerabilities.
