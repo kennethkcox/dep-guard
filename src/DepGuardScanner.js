@@ -109,32 +109,32 @@ class DepGuardScanner2 {
      * Main scan entry point
      */
     async scan() {
-        console.log('🔍 DepGuard v2.0 - Generic Vulnerability Scanner\n');
+        console.log('DepGuard v2.0 - Generic Vulnerability Scanner\n');
         console.log('=' .repeat(60));
 
         try {
             // Phase 1: Discover Project Structure
-            console.log('\n📦 Phase 1: Discovering project structure...');
+            console.log('\n[1/7] Phase 1: Discovering project structure...');
             await this.discoverProjectStructure();
 
             // Phase 2: Analyze Dependencies
-            console.log('\n📋 Phase 2: Analyzing dependencies...');
+            console.log('\n[2/7] Phase 2: Analyzing dependencies...');
             await this.analyzeDependencies();
 
             // Phase 3: Check Vulnerabilities
-            console.log('\n🔎 Phase 3: Checking for vulnerabilities...');
+            console.log('\n[3/7] Phase 3: Checking for vulnerabilities...');
             await this.checkVulnerabilities();
 
             // Phase 4: Build Call Graph
-            console.log('\n🕸️  Phase 4: Building call graph...');
+            console.log('\n[4/7] Phase 4: Building call graph...');
             await this.buildCallGraph();
 
             // Phase 5: Detect Entry Points
-            console.log('\n🚪 Phase 5: Detecting entry points...');
+            console.log('\n[5/7] Phase 5: Detecting entry points...');
             await this.detectEntryPoints();
 
             // Phase 6: Reachability Analysis
-            console.log('\n🔬 Phase 6: Performing reachability analysis...');
+            console.log('\n[6/7] Phase 6: Performing reachability analysis...');
             await this.performReachabilityAnalysis();
 
             // Phase 6.5: Data Flow Analysis (NEW)
@@ -148,11 +148,11 @@ class DepGuardScanner2 {
             }
 
             // Phase 7: Results
-            console.log('\n✅ Phase 7: Generating results...');
+            console.log('\n[7/7] Phase 7: Generating results...');
             this.generateResults();
 
             console.log('\n' + '='.repeat(60));
-            console.log(`✓ Scan complete: Found ${this.results.length} reachable vulnerabilities\n`);
+            console.log(`[OK] Scan complete: Found ${this.results.length} reachable vulnerabilities\n`);
 
             return {
                 success: true,
@@ -160,7 +160,7 @@ class DepGuardScanner2 {
                 statistics: this.getStatistics()
             };
         } catch (error) {
-            console.error(`\n❌ Scan failed: ${error.message}`);
+            console.error(`\n[ERROR] Scan failed: ${error.message}`);
             if (this.options.verbose) {
                 console.error(error.stack);
             }
@@ -190,13 +190,13 @@ class DepGuardScanner2 {
 
         const stats = this.manifestFinder.getStatistics(this.manifests);
 
-        console.log(`  ✓ Found ${stats.total} manifest(s):`);
+        console.log(`  [OK]Found ${stats.total} manifest(s):`);
         for (const [ecosystem, count] of Object.entries(stats.byEcosystem)) {
             console.log(`    - ${ecosystem}: ${count}`);
         }
 
         if (stats.workspaces > 1) {
-            console.log(`  ℹ️  Detected ${stats.workspaces} workspace(s) (monorepo)`);
+            console.log(`  [i]Detected ${stats.workspaces} workspace(s) (monorepo)`);
         }
     }
 
@@ -228,9 +228,9 @@ class DepGuardScanner2 {
                 if (this.options.verbose) {
                     const directCount = directDeps.length;
                     const transitiveCount = allDeps.length - directCount;
-                    console.log(`  ✓ ${manifest.filename}: ${directCount} direct, ${transitiveCount} transitive`);
+                    console.log(`  [OK]${manifest.filename}: ${directCount} direct, ${transitiveCount} transitive`);
                 } else {
-                    console.log(`  ✓ ${manifest.filename}: ${allDeps.length} dependencies`);
+                    console.log(`  [OK]${manifest.filename}: ${allDeps.length} dependencies`);
                 }
             } catch (error) {
                 this.logger.warn('Error parsing manifest', {
@@ -252,7 +252,7 @@ class DepGuardScanner2 {
                 // Re-throw critical errors, allow scanner to continue for non-critical
                 if (error instanceof ManifestParsingError || error instanceof FileSystemError) {
                     // Log but continue - don't fail entire scan for one bad manifest
-                    console.warn(`  ⚠️  Error parsing ${manifest.filename}: ${error.message}`);
+                    console.warn(`  [!]Error parsing ${manifest.filename}: ${error.message}`);
                 } else {
                     throw error;
                 }
@@ -264,7 +264,7 @@ class DepGuardScanner2 {
             sum + m.dependencies.filter(d => !d.transitive).length, 0);
         const transitiveDeps = totalDeps - directDeps;
 
-        console.log(`  ✓ Total dependencies: ${totalDeps} (${directDeps} direct, ${transitiveDeps} transitive)`);
+        console.log(`  [OK]Total dependencies: ${totalDeps} (${directDeps} direct, ${transitiveDeps} transitive)`);
     }
 
     /**
@@ -386,7 +386,7 @@ class DepGuardScanner2 {
                 return this.extractPubDependencies(content, manifest);
 
             default:
-                console.warn(`  ⚠️  Unsupported ecosystem: ${manifest.ecosystem}`);
+                console.warn(`  [!]Unsupported ecosystem: ${manifest.ecosystem}`);
                 return [];
         }
     }
@@ -729,7 +729,7 @@ class DepGuardScanner2 {
             }
         }
 
-        console.log(`  ✓ Found ${totalVulns} known vulnerabilities`);
+        console.log(`  [OK]Found ${totalVulns} known vulnerabilities`);
     }
 
     /**
@@ -774,7 +774,7 @@ class DepGuardScanner2 {
 
                     default:
                         if (this.options.verbose) {
-                            console.log(`  ⚠️  No analyzer for ${manifest.ecosystem} yet`);
+                            console.log(`  [!]No analyzer for ${manifest.ecosystem} yet`);
                         }
                 }
             } catch (error) {
@@ -783,12 +783,12 @@ class DepGuardScanner2 {
                     ecosystem: manifest.ecosystem,
                     error: error.message
                 });
-                console.warn(`  ⚠️  Error analyzing ${manifest.directory}: ${error.message}`);
+                console.warn(`  [!]Error analyzing ${manifest.directory}: ${error.message}`);
             }
         }
 
         const stats = this.reachabilityAnalyzer.getStatistics();
-        console.log(`  ✓ Built call graph: ${stats.totalNodes} nodes, ${stats.totalEdges} edges`);
+        console.log(`  [OK]Built call graph: ${stats.totalNodes} nodes, ${stats.totalEdges} edges`);
     }
 
     /**
@@ -850,7 +850,7 @@ class DepGuardScanner2 {
             }
         }
 
-        console.log(`  ✓ Detected ${entryPoints.length} entry points`);
+        console.log(`  [OK]Detected ${entryPoints.length} entry points`);
     }
 
     /**
@@ -915,7 +915,7 @@ class DepGuardScanner2 {
         // Analyze reachability for all vulnerabilities
         this.results = this.reachabilityAnalyzer.analyzeAll();
 
-        console.log(`  ✓ Analyzed ${this.results.length} potential vulnerabilities`);
+        console.log(`  [OK]Analyzed ${this.results.length} potential vulnerabilities`);
     }
 
     /**
@@ -926,7 +926,7 @@ class DepGuardScanner2 {
             return;
         }
 
-        console.log('\n🌊 Phase 6.5: Performing data flow analysis...');
+        console.log('\n[6.5/7] Performing data flow analysis...');
 
         // Set call graph
         this.dataFlowAnalyzer.setCallGraph(this.reachabilityAnalyzer.getCallGraph());
@@ -964,7 +964,7 @@ class DepGuardScanner2 {
             }
         }
 
-        console.log(`  ✓ Found ${taintedCount} vulnerabilities with user input taint paths`);
+        console.log(`  [OK] Found ${taintedCount} vulnerabilities with user input taint paths`);
     }
 
     /**
@@ -975,7 +975,7 @@ class DepGuardScanner2 {
             return;
         }
 
-        console.log('\n🤖 Phase 6.8: Applying ML risk prediction...');
+        console.log('\n[6.8/7] Applying ML risk prediction...');
 
         try {
             // Enrich all results with ML predictions
@@ -984,13 +984,13 @@ class DepGuardScanner2 {
             const modelInfo = this.mlManager.getModelInfo();
 
             if (modelInfo.status === 'trained') {
-                console.log(`  ✓ Using trained model (accuracy: ${(modelInfo.accuracy * 100).toFixed(1)}%, ${modelInfo.samples} samples)`);
+                console.log(`  [OK]Using trained model (accuracy: ${(modelInfo.accuracy * 100).toFixed(1)}%, ${modelInfo.samples} samples)`);
             } else {
-                console.log(`  ✓ Using default risk scoring (collect feedback to train custom model)`);
+                console.log(`  [OK]Using default risk scoring (collect feedback to train custom model)`);
             }
         } catch (error) {
             this.logger.error('ML analysis failed', { error: error.message });
-            console.log(`  ⚠️  ML analysis failed: ${error.message}`);
+            console.log(`  [!]ML analysis failed: ${error.message}`);
         }
     }
 
@@ -1013,7 +1013,7 @@ class DepGuardScanner2 {
 
         this.results = filtered;
 
-        console.log(`  ✓ ${this.results.length} high-confidence findings`);
+        console.log(`  [OK]${this.results.length} high-confidence findings`);
     }
 
     /**

@@ -22,7 +22,7 @@ class GenericEntryPointDetector {
    * No assumptions about structure
    */
   detectEntryPoints(files, callGraph) {
-    console.log(`\n🔍 Detecting entry points in ${files.length} files...`);
+    console.log(`\nDetecting entry points in ${files.length} files...`);
 
     files.forEach(file => {
       const signals = this.analyzeFile(file, callGraph);
@@ -36,7 +36,7 @@ class GenericEntryPointDetector {
           type: this.determineType(signals)
         });
 
-        console.log(`  ✓ Entry point: ${path.basename(file)} (${Math.round(confidence * 100)}%)`);
+        console.log(`  [OK] Entry point: ${path.basename(file)} (${Math.round(confidence * 100)}%)`);
         signals.forEach(s => console.log(`    - ${s.type}: ${s.reason}`));
       }
     });

@@ -251,7 +251,7 @@ class GenericManifestFinder {
      */
     findManifests(projectRoot) {
         if (this.options.verbose) {
-            console.log(`🔍 Searching for manifests in: ${projectRoot}`);
+            console.log(` Searching for manifests in: ${projectRoot}`);
         }
 
         const manifests = [];
@@ -266,7 +266,7 @@ class GenericManifestFinder {
                         seen.add(key);
                         manifests.push(manifest);
                         if (this.options.verbose) {
-                            console.log(`  ✓ Found: ${manifest.filename} (${manifest.ecosystem})`);
+                            console.log(`  [OK]Found: ${manifest.filename} (${manifest.ecosystem})`);
                         }
                     }
                 }

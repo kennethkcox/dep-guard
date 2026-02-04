@@ -42,11 +42,11 @@ program
       const logLevel = options.verbose ? 'DEBUG' : 'INFO';
       configureLogger({ level: logLevel });
 
-      console.log(chalk.bold.cyan('╔════════════════════════════════════════════════════════════════╗'));
-      console.log(chalk.bold.cyan('║                    DepGuard v2.0.0                            ║'));
-      console.log(chalk.bold.cyan('║     Advanced Dependency Vulnerability Scanner                 ║'));
-      console.log(chalk.bold.cyan('║              with Reachability Analysis                        ║'));
-      console.log(chalk.bold.cyan('╚════════════════════════════════════════════════════════════════╝\n'));
+      console.log(chalk.bold.cyan('+================================================================+'));
+      console.log(chalk.bold.cyan('|                    DepGuard v2.0.0                            |'));
+      console.log(chalk.bold.cyan('|     Advanced Dependency Vulnerability Scanner                 |'));
+      console.log(chalk.bold.cyan('|              with Reachability Analysis                        |'));
+      console.log(chalk.bold.cyan('+================================================================+\n'));
 
       // Validate inputs
       const projectPath = path.resolve(options.path);
@@ -119,19 +119,19 @@ program
         }
 
         fs.writeFileSync(options.file, reportContent, 'utf8');
-        console.log(chalk.green(`\n✓ Report saved to: ${options.file}`));
+        console.log(chalk.green(`\n[OK] Report saved to: ${options.file}`));
       }
 
       // Exit with appropriate code
       const reachableVulns = filteredResults.filter(r => r.isReachable);
 
       if (reachableVulns.length > 0) {
-        console.log(chalk.yellow(`\n⚠️ Found ${reachableVulns.length} reachable vulnerabilities.`));
+        console.log(chalk.yellow(`\n[!] Found ${reachableVulns.length} reachable vulnerabilities.`));
         process.exit(1);
       } else if (filteredResults.length > 0) {
-        console.log(chalk.white(`\nℹ️ Found ${filteredResults.length} vulnerabilities, but none were confirmed reachable.`));
+        console.log(chalk.white(`\n[i] Found ${filteredResults.length} vulnerabilities, but none were confirmed reachable.`));
       } else {
-        console.log(chalk.green('\n✓ No vulnerabilities found.'));
+        console.log(chalk.green('\n[OK] No vulnerabilities found.'));
       }
 
     } catch (error) {
@@ -168,7 +168,7 @@ program
       const projectPath = path.resolve(options.path);
       const scanner = new DepGuardScanner({ projectPath });
 
-      console.log(chalk.bold('\n📊 Project Information\n'));
+      console.log(chalk.bold('\n[STATS] Project Information\n'));
       console.log(`Project Path: ${projectPath}`);
 
       await scanner.discoverProjectStructure();
@@ -197,7 +197,7 @@ program
 
     if (fs.existsSync(cacheDir)) {
       fs.rmSync(cacheDir, { recursive: true, force: true });
-      console.log(chalk.green('✓ Cache cleared'));
+      console.log(chalk.green('[OK] Cache cleared'));
     } else {
       console.log(chalk.yellow('No cache found'));
     }
@@ -241,7 +241,7 @@ program
 
       mlManager.recordFeedback(finding, feedback);
 
-      console.log(chalk.green(`✓ Feedback recorded for ${cveId}`));
+      console.log(chalk.green(`[OK] Feedback recorded for ${cveId}`));
       console.log(chalk.gray(`  Verdict: ${options.verdict}`));
 
       if (options.reason) {
@@ -253,7 +253,7 @@ program
       const threshold = 50;
 
       if (stats.total >= threshold) {
-        console.log(chalk.yellow(`\n💡 You have ${stats.total} feedback entries. Run 'depguard ml train' to train a custom model!`));
+        console.log(chalk.yellow(`\n[TIP] You have ${stats.total} feedback entries. Run 'depguard ml train' to train a custom model!`));
       } else {
         console.log(chalk.gray(`\n  Total feedback: ${stats.total}/${threshold} (need ${threshold} for auto-training)`));
       }
@@ -278,7 +278,7 @@ mlCommand
 
       const status = mlManager.getStatus();
 
-      console.log(chalk.bold.cyan('\n📊 ML Status\n'));
+      console.log(chalk.bold.cyan('\n[STATS] ML Status\n'));
 
       // Feedback stats
       console.log(chalk.bold('Feedback:'));
@@ -296,7 +296,7 @@ mlCommand
       if (status.model.status === 'trained') {
         console.log(chalk.green(`  Status: Trained`));
         console.log(`  Accuracy: ${(status.model.accuracy * 100).toFixed(1)}%`);
-        console.log(`  Training Samples: ${status.model.samples}`));
+        console.log(`  Training Samples: ${status.model.samples}`);
         console.log(`  Trained At: ${status.model.trainedAt}`);
       } else {
         console.log(chalk.yellow(`  Status: Untrained (using defaults)`));
@@ -306,14 +306,14 @@ mlCommand
       // Recommendations
       console.log(chalk.bold('\nRecommendations:'));
       if (status.readyForTraining && status.model.status === 'untrained') {
-        console.log(chalk.green(`  ✓ Ready to train! Run 'depguard ml train'`));
+        console.log(chalk.green(`  [OK] Ready to train! Run 'depguard ml train'`));
       } else if (!status.readyForTraining) {
         console.log(chalk.gray(`  Collect ${10 - status.feedback.total} more feedback entries to enable training`));
       }
 
       if (status.trainingRecommended && status.model.status === 'trained') {
         const newSamples = status.feedback.total - status.model.samples;
-        console.log(chalk.yellow(`  💡 ${newSamples} new feedback entries. Consider retraining!`));
+        console.log(chalk.yellow(`  [TIP] ${newSamples} new feedback entries. Consider retraining!`));
       }
     } catch (error) {
       console.error(chalk.red(`Error: ${error.message}`));
@@ -329,16 +329,16 @@ mlCommand
       const MLManager = require('../src/ml/MLManager');
       const mlManager = new MLManager();
 
-      console.log(chalk.cyan('🤖 Training ML model...\n'));
+      console.log(chalk.cyan('[ML] Training ML model...\n'));
 
       const result = mlManager.trainModel();
 
       if (result.success) {
-        console.log(chalk.green(`✓ Model trained successfully!`));
+        console.log(chalk.green(`[OK] Model trained successfully!`));
         console.log(`  Accuracy: ${(result.accuracy * 100).toFixed(1)}%`);
         console.log(`  Training Samples: ${result.samples}`);
         console.log(`  Trained At: ${result.trainedAt}`);
-        console.log(chalk.yellow(`\n💡 Future scans will use this personalized model!`));
+        console.log(chalk.yellow(`\n[TIP] Future scans will use this personalized model!`));
       } else {
         console.log(chalk.red(`✗ Training failed: ${result.message}`));
         if (result.currentCount) {
@@ -362,7 +362,7 @@ mlCommand
 
       const stats = mlManager.getFeedbackStats();
 
-      console.log(chalk.bold.cyan('\n📈 Feedback Statistics\n'));
+      console.log(chalk.bold.cyan('\n[DATA] Feedback Statistics\n'));
 
       console.log(chalk.bold('Overall:'));
       console.log(`  Total: ${stats.total}`);
@@ -398,7 +398,7 @@ mlCommand
       const success = mlManager.exportFeedback(outputPath);
 
       if (success) {
-        console.log(chalk.green(`✓ Feedback exported to ${outputPath}`));
+        console.log(chalk.green(`[OK] Feedback exported to ${outputPath}`));
       } else {
         console.log(chalk.red('✗ Export failed'));
         process.exit(1);
@@ -419,7 +419,7 @@ mlCommand
 
       mlManager.resetModel();
 
-      console.log(chalk.green('✓ ML model reset to defaults'));
+      console.log(chalk.green('[OK] ML model reset to defaults'));
       console.log(chalk.gray('  Feedback data preserved. Model will use default weights until retrained.'));
     } catch (error) {
       console.error(chalk.red(`Error: ${error.message}`));
@@ -434,7 +434,7 @@ mlCommand
   .action((options) => {
     try {
       if (!options.confirm) {
-        console.log(chalk.yellow('⚠️  This will delete ALL feedback data!'));
+        console.log(chalk.yellow('[!]  This will delete ALL feedback data!'));
         console.log(chalk.gray('  Run with --confirm to proceed'));
         process.exit(1);
       }
@@ -444,7 +444,7 @@ mlCommand
 
       mlManager.clearFeedback();
 
-      console.log(chalk.green('✓ All feedback data cleared'));
+      console.log(chalk.green('[OK] All feedback data cleared'));
     } catch (error) {
       console.error(chalk.red(`Error: ${error.message}`));
       process.exit(1);

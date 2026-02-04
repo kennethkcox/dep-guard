@@ -57,9 +57,9 @@ class Reporter {
     let output = [];
 
     // Header
-    output.push(chalk.bold('\n╔════════════════════════════════════════════════════════════════╗'));
-    output.push(chalk.bold('║ DepGuard Security Report                                       ║'));
-    output.push(chalk.bold('╠════════════════════════════════════════════════════════════════╣'));
+    output.push(chalk.bold('\n+================================================================+'));
+    output.push(chalk.bold('| DepGuard Security Report                                       |'));
+    output.push(chalk.bold('+================================================================+'));
 
     // Summary statistics
     const calculatedStats = this.calculateStatistics(results);
@@ -71,22 +71,22 @@ class Reporter {
       reachableVulnerabilities: metadata.reachableVulnerabilities || calculatedStats.reachableVulnerabilities
     };
 
-    output.push(chalk.bold(`║ Total Dependencies: ${String(stats.totalDependencies).padEnd(42)}║`));
-    output.push(chalk.bold(`║ Vulnerabilities Found: ${String(stats.totalVulnerabilities).padEnd(38)}║`));
-    output.push(chalk.bold(`║ Reachable Vulnerabilities: ${String(stats.reachableVulnerabilities).padEnd(34)}║`));
+    output.push(chalk.bold(`| Total Dependencies: ${String(stats.totalDependencies).padEnd(42)}|`));
+    output.push(chalk.bold(`| Vulnerabilities Found: ${String(stats.totalVulnerabilities).padEnd(38)}|`));
+    output.push(chalk.bold(`| Reachable Vulnerabilities: ${String(stats.reachableVulnerabilities).padEnd(34)}|`));
     if (calculatedStats.taintedVulnerabilities > 0) {
-      output.push(chalk.red(`║ 🌊 Tainted (User Input): ${String(calculatedStats.taintedVulnerabilities).padEnd(33)}║`));
+      output.push(chalk.red(`| [FLOW] Tainted (User Input): ${String(calculatedStats.taintedVulnerabilities).padEnd(26)}|`));
     }
     if (calculatedStats.mlPredicted > 0) {
-      output.push(chalk.cyan(`║ 🤖 ML Risk Assessed: ${String(calculatedStats.mlPredicted).padEnd(37)}║`));
+      output.push(chalk.cyan(`| [ML] Risk Assessed: ${String(calculatedStats.mlPredicted).padEnd(40)}|`));
       if (calculatedStats.mlCritical > 0 || calculatedStats.mlHigh > 0) {
-        output.push(chalk.red(`║    ML Critical/High: ${String(calculatedStats.mlCritical + calculatedStats.mlHigh).padEnd(37)}║`));
+        output.push(chalk.red(`|    ML Critical/High: ${String(calculatedStats.mlCritical + calculatedStats.mlHigh).padEnd(37)}|`));
       }
     }
-    output.push(chalk.bold(`║ Critical: ${String(calculatedStats.critical).padEnd(51)}║`));
-    output.push(chalk.bold(`║ High: ${String(calculatedStats.high).padEnd(55)}║`));
-    output.push(chalk.bold(`║ Medium: ${String(calculatedStats.medium).padEnd(53)}║`));
-    output.push(chalk.bold('╚════════════════════════════════════════════════════════════════╝\n'));
+    output.push(chalk.bold(`| Critical: ${String(calculatedStats.critical).padEnd(51)}|`));
+    output.push(chalk.bold(`| High: ${String(calculatedStats.high).padEnd(55)}|`));
+    output.push(chalk.bold(`| Medium: ${String(calculatedStats.medium).padEnd(53)}|`));
+    output.push(chalk.bold('+================================================================+\n'));
 
     // Filter results if needed
     let filteredResults = results;
@@ -95,7 +95,7 @@ class Reporter {
     }
 
     if (filteredResults.length === 0) {
-      output.push(chalk.green('✓ No vulnerabilities found!\n'));
+      output.push(chalk.green('[OK] No vulnerabilities found!\n'));
       return output.join('\n');
     }
 
@@ -136,7 +136,7 @@ class Reporter {
                         score >= 60 ? chalk.yellow :
                         score >= 40 ? chalk.blue : chalk.gray;
 
-      output.push(chalk.bold(`\n🎯 ML Risk Score: ${scoreColor(`${score}/100 (${level})`)}`));
+      output.push(chalk.bold(`\n[*] ML Risk Score: ${scoreColor(`${score}/100 (${level})`)}`));
     }
 
     // Severity indicator
@@ -145,7 +145,7 @@ class Reporter {
 
     // Reachability indicator
     const reachableIcon = reach && reach.isReachable
-      ? chalk.red('⚠️  REACHABLE')
+      ? chalk.red('[!] REACHABLE')
       : chalk.yellow('○ NOT REACHABLE');
 
     const confidence = reach && reach.isReachable
@@ -162,7 +162,7 @@ class Reporter {
     if (result.dataFlow) {
       const df = result.dataFlow;
       if (df.isTainted) {
-        output.push(chalk.red(`\n🌊 Data Flow: TAINTED (${Math.round(df.confidence * 100)}% confidence)`));
+        output.push(chalk.red(`\n[FLOW] Data Flow: TAINTED (${Math.round(df.confidence * 100)}% confidence)`));
         output.push(chalk.red(`   User input reaches this vulnerability!`));
 
         if (df.sources && df.sources.length > 0) {
@@ -170,12 +170,12 @@ class Reporter {
         }
 
         if (df.sanitizers && df.sanitizers.length > 0) {
-          output.push(chalk.yellow(`   ⚠️  Sanitizers: ${df.sanitizers.join(', ')} (may not be effective)`));
+          output.push(chalk.yellow(`   [!] Sanitizers: ${df.sanitizers.join(', ')} (may not be effective)`));
         }
 
         output.push(chalk.red(`   Risk: ${df.risk}`));
       } else {
-        output.push(chalk.green(`\n🌊 Data Flow: Not tainted`));
+        output.push(chalk.green(`\n[FLOW] Data Flow: Not tainted`));
         output.push(chalk.dim(`   No user input detected reaching this vulnerability`));
       }
     }
@@ -184,7 +184,7 @@ class Reporter {
     if (result.mlPrediction && result.mlPrediction.explanation && this.options.verbosity !== 'quiet') {
       const topFactors = result.mlPrediction.explanation.slice(0, 3);
       if (topFactors.length > 0) {
-        output.push(chalk.cyan('\n💡 Top Risk Factors:'));
+        output.push(chalk.cyan('\n[TIP] Top Risk Factors:'));
         topFactors.forEach((factor, idx) => {
           const sign = factor.impact === 'increases' ? '+' : '-';
           const color = factor.impact === 'increases' ? chalk.red : chalk.green;
@@ -205,7 +205,7 @@ class Reporter {
 
       topPath.nodes.forEach((node, idx) => {
         const indent = '  '.repeat(idx);
-        const arrow = idx > 0 ? '→ ' : '';
+        const arrow = idx > 0 ? '->' : '';
         output.push(chalk.dim(`  ${indent}${arrow}${node}`));
       });
 
@@ -233,7 +233,7 @@ class Reporter {
       });
     }
 
-    output.push(chalk.gray('─'.repeat(64)));
+    output.push(chalk.gray('-'.repeat(64)));
 
     return output.join('\n');
   }
@@ -313,7 +313,7 @@ class Reporter {
 </head>
 <body>
   <div class="container">
-    <h1>🛡️ DepGuard Security Report</h1>
+    <h1>DepGuard Security Report</h1>
     <p>Generated: ${new Date().toISOString()}</p>
 
     <div class="summary">
@@ -366,7 +366,7 @@ class Reporter {
     if (isReachable && reach.paths && reach.paths.length > 0) {
       html += '<div class="path"><strong>Reachable Path:</strong>';
       reach.paths[0].nodes.forEach((node, idx) => {
-        const arrow = idx > 0 ? '→ ' : '';
+        const arrow = idx > 0 ? '->' : '';
         html += `<div class="path-node">${'  '.repeat(idx)}${arrow}${node}</div>`;
       });
       html += '</div>';
@@ -448,7 +448,7 @@ class Reporter {
       md += `### ${idx + 1}. ${vuln.id}: ${vuln.title}\n\n`;
       md += `- **Package:** ${r.package}\n`;
       md += `- **Severity:** ${vuln.severity} (CVSS: ${vuln.cvss})\n`;
-      md += `- **Reachable:** ${reach && reach.isReachable ? '⚠️ YES' : '○ NO'}\n`;
+      md += `- **Reachable:** ${reach && reach.isReachable ? '[!] YES' : '[ ] NO'}\n`;
 
       if (reach && reach.isReachable) {
         md += `- **Confidence:** ${Math.round(reach.confidence * 100)}%\n`;
@@ -509,12 +509,12 @@ class Reporter {
    */
   getSeverityIcon(severity) {
     const icons = {
-      CRITICAL: '🔴',
-      HIGH: '🟠',
-      MEDIUM: '🟡',
-      LOW: '🔵'
+      CRITICAL: '[CRIT]',
+      HIGH: '[HIGH]',
+      MEDIUM: '[MED]',
+      LOW: '[LOW]'
     };
-    return icons[severity] || '⚪';
+    return icons[severity] || '[ ]';
   }
 
   /**
@@ -535,7 +535,7 @@ class Reporter {
    */
   saveToFile(content, filepath) {
     fs.writeFileSync(filepath, content, 'utf-8');
-    console.log(chalk.green(`\n✓ Report saved to: ${filepath}`));
+    console.log(chalk.green(`\n[OK] Report saved to: ${filepath}`));
   }
 }
 
