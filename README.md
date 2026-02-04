@@ -2,7 +2,9 @@
 
 **Advanced Dependency Vulnerability Scanner with Reachability Analysis**
 
+[![Security Check](https://github.com/kennethkcox/dep-guard/actions/workflows/security.yml/badge.svg)](https://github.com/kennethkcox/dep-guard/actions/workflows/security.yml)
 [![Tests](https://img.shields.io/badge/tests-98%20passing-brightgreen)](#testing)
+[![Production Vulnerabilities](https://img.shields.io/badge/production%20vulnerabilities-0-brightgreen)](SECURITY_STATUS.md)
 [![Node.js](https://img.shields.io/badge/node-%3E%3D16.0.0-brightgreen)](https://nodejs.org/)
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue)](LICENSE)
 
