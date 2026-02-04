@@ -1,0 +1,46 @@
+name: Pre-Push Test Verification
+
+on:
+  push:
+    branches: [ main, develop ]
+
+# This workflow runs BEFORE the main security workflow
+# It's designed to catch test failures quickly
+jobs:
+  quick-test:
+    name: Quick Test Verification
+    runs-on: ubuntu-latest
+
+    strategy:
+      # Don't cancel other jobs if one fails - we want to see all results
+      fail-fast: false
+      matrix:
+        node-version: [18, 20, 22]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests with verbose output
+        run: npm test -- --verbose --no-coverage
+        env:
+          CI: true
+
+      - name: Report results
+        if: always()
+        run: |
+          if [ $? -eq 0 ]; then
+            echo "✅ All tests passed on Node ${{ matrix.node-version }}"
+          else
+            echo "❌ Tests failed on Node ${{ matrix.node-version }}"
+            exit 1
+          fi

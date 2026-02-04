@@ -9,7 +9,10 @@
   "scripts": {
     "start": "node bin/depguard.js",
     "test": "jest",
-    "lint": "eslint src/**/*.js"
+    "test:ci": "jest --ci --coverage --maxWorkers=2",
+    "lint": "eslint src/**/*.js",
+    "precommit": "npm test",
+    "prepare": "node -e \"try { require('fs').mkdirSync('.husky') } catch(e) {}\""
   },
   "keywords": [
     "security",

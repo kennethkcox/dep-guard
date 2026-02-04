@@ -1,0 +1,15 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+# Run tests before commit
+echo "Running tests before commit..."
+npm test --silent
+
+if [ $? -ne 0 ]; then
+  echo ""
+  echo "❌ Tests failed! Commit aborted."
+  echo "Fix the failing tests or use 'git commit --no-verify' to skip this check."
+  exit 1
+fi
+
+echo "✅ All tests passed!"
