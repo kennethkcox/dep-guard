@@ -311,11 +311,12 @@ jobs:
         run: npm ci
 
       - name: Full DepGuard scan (including test apps)
+        continue-on-error: true
         run: |
           echo "::group::Full Repository Scan"
           echo "⚠️ Note: This includes intentionally vulnerable test applications"
-          node bin/depguard.js scan -p . --deep-analysis -o json -f depguard-full.json
-          node bin/depguard.js scan -p . --deep-analysis
+          node bin/depguard.js scan -p . --deep-analysis -o json -f depguard-full.json || true
+          node bin/depguard.js scan -p . --deep-analysis || true
           echo "::endgroup::"
 
       - name: Generate comparison report

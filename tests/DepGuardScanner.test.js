@@ -65,6 +65,11 @@ describe('DepGuardScanner', () => {
     });
 
     test('should scan JavaScript project with package.json', async () => {
+      // Ensure directory exists
+      if (!fs.existsSync(testProjectDir)) {
+        fs.mkdirSync(testProjectDir, { recursive: true });
+      }
+
       const packageJson = {
         name: 'test-project',
         version: '1.0.0',
@@ -73,8 +78,9 @@ describe('DepGuardScanner', () => {
         }
       };
 
+      const packageJsonPath = path.join(testProjectDir, 'package.json');
       fs.writeFileSync(
-        path.join(testProjectDir, 'package.json'),
+        packageJsonPath,
         JSON.stringify(packageJson, null, 2)
       );
 
@@ -83,6 +89,9 @@ describe('DepGuardScanner', () => {
         path.join(testProjectDir, 'index.js'),
         'const chalk = require("chalk");\nconsole.log(chalk.green("Hello"));'
       );
+
+      // Verify file was created
+      expect(fs.existsSync(packageJsonPath)).toBe(true);
 
       scanner = new DepGuardScanner({ projectPath: testProjectDir });
       const result = await scanner.scan();
@@ -132,6 +141,11 @@ describe('DepGuardScanner', () => {
 
   describe('generateReport', () => {
     test('should generate table report', async () => {
+      // Ensure directory exists
+      if (!fs.existsSync(testProjectDir)) {
+        fs.mkdirSync(testProjectDir, { recursive: true });
+      }
+
       const packageJson = {
         name: 'test-project',
         version: '1.0.0',
@@ -151,6 +165,11 @@ describe('DepGuardScanner', () => {
     });
 
     test('should generate JSON report', async () => {
+      // Ensure directory exists
+      if (!fs.existsSync(testProjectDir)) {
+        fs.mkdirSync(testProjectDir, { recursive: true });
+      }
+
       const packageJson = {
         name: 'test-project',
         version: '1.0.0',
