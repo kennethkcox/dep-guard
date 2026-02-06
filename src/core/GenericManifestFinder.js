@@ -19,7 +19,12 @@ const path = require('path');
  * - Rust: Cargo.toml, Cargo.lock
  * - Ruby: Gemfile, Gemfile.lock
  * - PHP: composer.json, composer.lock
- * - .NET: *.csproj, packages.config, *.nuspec
+ * - .NET: *.csproj, *.fsproj, *.vbproj, packages.config, *.nuspec,
+ *         Directory.Build.props, Directory.Packages.props, packages.lock.json
+ * - Swift: Package.swift, Package.resolved
+ * - Elixir: mix.exs, mix.lock
+ * - Scala: build.sbt
+ * - Haskell: cabal.project, stack.yaml, package.yaml
  *
  * FEATURES:
  * - Recursive directory walking with depth limits
@@ -219,13 +224,34 @@ class GenericManifestFinder {
                 validator: null
             },
 
-            // .NET ecosystem (legacy packages.config)
+            // .NET ecosystem
             {
                 filename: 'packages.config',
                 ecosystem: 'nuget',
                 type: 'manifest',
                 confidence: 0.95,
                 validator: this.validatePackagesConfig.bind(this)
+            },
+            {
+                filename: 'Directory.Build.props',
+                ecosystem: 'nuget',
+                type: 'manifest',
+                confidence: 0.85,
+                validator: this.validateDirectoryBuildProps.bind(this)
+            },
+            {
+                filename: 'Directory.Packages.props',
+                ecosystem: 'nuget',
+                type: 'manifest',
+                confidence: 0.95,
+                validator: this.validateDirectoryPackagesProps.bind(this)
+            },
+            {
+                filename: 'packages.lock.json',
+                ecosystem: 'nuget',
+                type: 'lockfile',
+                confidence: 0.95,
+                validator: this.validateNuGetLockfile.bind(this)
             },
 
             // Dart/Flutter ecosystem
@@ -239,6 +265,97 @@ class GenericManifestFinder {
             {
                 filename: 'pubspec.lock',
                 ecosystem: 'pub',
+                type: 'lockfile',
+                confidence: 0.95,
+                validator: null
+            },
+
+            // Python ecosystem (additional)
+            {
+                filename: 'poetry.lock',
+                ecosystem: 'pypi',
+                type: 'lockfile',
+                confidence: 0.95,
+                validator: this.validatePoetryLock.bind(this)
+            },
+            {
+                filename: 'setup.cfg',
+                ecosystem: 'pypi',
+                type: 'manifest',
+                confidence: 0.85,
+                validator: this.validateSetupCfg.bind(this)
+            },
+
+            // Node.js ecosystem (additional)
+            {
+                filename: 'bun.lockb',
+                ecosystem: 'npm',
+                type: 'lockfile',
+                confidence: 0.9,
+                validator: null
+            },
+
+            // Swift ecosystem
+            {
+                filename: 'Package.swift',
+                ecosystem: 'swift',
+                type: 'manifest',
+                confidence: 1.0,
+                validator: this.validatePackageSwift.bind(this)
+            },
+            {
+                filename: 'Package.resolved',
+                ecosystem: 'swift',
+                type: 'lockfile',
+                confidence: 0.95,
+                validator: null
+            },
+
+            // Elixir ecosystem
+            {
+                filename: 'mix.exs',
+                ecosystem: 'hex',
+                type: 'manifest',
+                confidence: 1.0,
+                validator: this.validateMixExs.bind(this)
+            },
+            {
+                filename: 'mix.lock',
+                ecosystem: 'hex',
+                type: 'lockfile',
+                confidence: 0.95,
+                validator: null
+            },
+
+            // Scala ecosystem
+            {
+                filename: 'build.sbt',
+                ecosystem: 'maven',
+                type: 'manifest',
+                confidence: 1.0,
+                validator: this.validateBuildSbt.bind(this)
+            },
+
+            // Haskell ecosystem
+            {
+                filename: 'package.yaml',
+                ecosystem: 'hackage',
+                type: 'manifest',
+                confidence: 0.85,
+                validator: this.validateHaskellPackageYaml.bind(this)
+            },
+            {
+                filename: 'stack.yaml',
+                ecosystem: 'hackage',
+                type: 'manifest',
+                confidence: 0.90,
+                validator: this.validateStackYaml.bind(this)
+            },
+
+            // Java ecosystem (additional)
+            {
+                filename: 'gradle.lockfile',
+                ecosystem: 'maven',
                 type: 'lockfile',
                 confidence: 0.95,
                 validator: null
@@ -386,14 +503,38 @@ class GenericManifestFinder {
             }
         }
 
-        // Check for .csproj files (regex pattern)
-        if (/\.csproj$/.test(filename)) {
+        // Check for .NET project files (regex patterns)
+        if (/\.(csproj|fsproj|vbproj)$/.test(filename)) {
             return {
                 path: filePath,
                 filename: filename,
                 ecosystem: 'nuget',
                 type: 'manifest',
                 confidence: 1.0,
+                directory: path.dirname(filePath)
+            };
+        }
+
+        // Check for .nuspec files
+        if (/\.nuspec$/.test(filename)) {
+            return {
+                path: filePath,
+                filename: filename,
+                ecosystem: 'nuget',
+                type: 'manifest',
+                confidence: 0.9,
+                directory: path.dirname(filePath)
+            };
+        }
+
+        // Check for Haskell .cabal files
+        if (/\.cabal$/.test(filename)) {
+            return {
+                path: filePath,
+                filename: filename,
+                ecosystem: 'hackage',
+                type: 'manifest',
+                confidence: 0.95,
                 directory: path.dirname(filePath)
             };
         }
@@ -603,6 +744,127 @@ class GenericManifestFinder {
                 return { valid: false, message: 'No dependencies found' };
             }
 
+            return { valid: true };
+        } catch (error) {
+            return { valid: false, message: `Cannot read file: ${error.message}` };
+        }
+    }
+
+    validateDirectoryBuildProps(filePath) {
+        try {
+            const content = fs.readFileSync(filePath, 'utf8');
+            if (!content.includes('PackageReference')) {
+                return { valid: false, message: 'No PackageReference elements found' };
+            }
+            return { valid: true };
+        } catch (error) {
+            return { valid: false, message: `Cannot read file: ${error.message}` };
+        }
+    }
+
+    validateDirectoryPackagesProps(filePath) {
+        try {
+            const content = fs.readFileSync(filePath, 'utf8');
+            if (!content.includes('PackageVersion') && !content.includes('PackageReference')) {
+                return { valid: false, message: 'No PackageVersion elements found' };
+            }
+            return { valid: true };
+        } catch (error) {
+            return { valid: false, message: `Cannot read file: ${error.message}` };
+        }
+    }
+
+    validateNuGetLockfile(filePath) {
+        try {
+            const content = fs.readFileSync(filePath, 'utf8');
+            const data = JSON.parse(content);
+            if (!data.version || !data.dependencies) {
+                return { valid: false, message: 'Not a valid NuGet lock file' };
+            }
+            return { valid: true };
+        } catch (error) {
+            return { valid: false, message: `Invalid JSON: ${error.message}` };
+        }
+    }
+
+    validatePoetryLock(filePath) {
+        try {
+            const content = fs.readFileSync(filePath, 'utf8');
+            if (!content.includes('[[package]]')) {
+                return { valid: false, message: 'Not a valid poetry.lock' };
+            }
+            return { valid: true };
+        } catch (error) {
+            return { valid: false, message: `Cannot read file: ${error.message}` };
+        }
+    }
+
+    validateSetupCfg(filePath) {
+        try {
+            const content = fs.readFileSync(filePath, 'utf8');
+            if (!content.includes('install_requires') && !content.includes('[options]')) {
+                return { valid: false, message: 'No dependency section found' };
+            }
+            return { valid: true };
+        } catch (error) {
+            return { valid: false, message: `Cannot read file: ${error.message}` };
+        }
+    }
+
+    validatePackageSwift(filePath) {
+        try {
+            const content = fs.readFileSync(filePath, 'utf8');
+            if (!content.includes('dependencies') && !content.includes('.package(')) {
+                return { valid: false, message: 'No dependencies found' };
+            }
+            return { valid: true };
+        } catch (error) {
+            return { valid: false, message: `Cannot read file: ${error.message}` };
+        }
+    }
+
+    validateMixExs(filePath) {
+        try {
+            const content = fs.readFileSync(filePath, 'utf8');
+            if (!content.includes('defp deps') && !content.includes('def deps')) {
+                return { valid: false, message: 'No deps function found' };
+            }
+            return { valid: true };
+        } catch (error) {
+            return { valid: false, message: `Cannot read file: ${error.message}` };
+        }
+    }
+
+    validateBuildSbt(filePath) {
+        try {
+            const content = fs.readFileSync(filePath, 'utf8');
+            if (!content.includes('libraryDependencies') && !content.includes('%%')) {
+                return { valid: false, message: 'No library dependencies found' };
+            }
+            return { valid: true };
+        } catch (error) {
+            return { valid: false, message: `Cannot read file: ${error.message}` };
+        }
+    }
+
+    validateHaskellPackageYaml(filePath) {
+        try {
+            const content = fs.readFileSync(filePath, 'utf8');
+            if (!content.includes('dependencies:')) {
+                return { valid: false, message: 'No dependencies found' };
+            }
+            return { valid: true };
+        } catch (error) {
+            return { valid: false, message: `Cannot read file: ${error.message}` };
+        }
+    }
+
+    validateStackYaml(filePath) {
+        try {
+            const content = fs.readFileSync(filePath, 'utf8');
+            if (!content.includes('resolver:') && !content.includes('packages:')) {
+                return { valid: false, message: 'Not a valid stack.yaml' };
+            }
             return { valid: true };
         } catch (error) {
             return { valid: false, message: `Cannot read file: ${error.message}` };

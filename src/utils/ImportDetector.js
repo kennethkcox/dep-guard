@@ -79,12 +79,68 @@ class ImportDetector {
       new RegExp(`['"\`]${this.escapeRegex(packageName)}['"\`]`, 'g')
     ];
 
+    // C# patterns
+    const csharpPatterns = [
+      // using Package.Namespace;
+      new RegExp(`^\\s*using\\s+${this.escapeRegex(packageName)}(\\.[\\w.]+)?\\s*;`, 'gm'),
+      // using static Package.Namespace.Class;
+      new RegExp(`^\\s*using\\s+static\\s+${this.escapeRegex(packageName)}(\\.[\\w.]+)?\\s*;`, 'gm'),
+      // using alias = Package.Namespace;
+      new RegExp(`^\\s*using\\s+\\w+\\s*=\\s*${this.escapeRegex(packageName)}(\\.[\\w.]+)?\\s*;`, 'gm')
+    ];
+
+    // Rust patterns
+    const rustPatterns = [
+      // use package::module;
+      new RegExp(`^\\s*use\\s+${this.escapeRegex(packageName)}(::.*)?;`, 'gm'),
+      // extern crate package;
+      new RegExp(`^\\s*extern\\s+crate\\s+${this.escapeRegex(packageName)}\\s*;`, 'gm')
+    ];
+
+    // Ruby patterns
+    const rubyPatterns = [
+      // require 'package'
+      new RegExp(`^\\s*require\\s+['"]${this.escapeRegex(packageName)}['"]`, 'gm'),
+      // require_relative 'package'
+      new RegExp(`^\\s*require_relative\\s+['"]${this.escapeRegex(packageName)}['"]`, 'gm'),
+      // gem 'package'
+      new RegExp(`^\\s*gem\\s+['"]${this.escapeRegex(packageName)}['"]`, 'gm')
+    ];
+
+    // PHP patterns
+    const phpPatterns = [
+      // use Package\Namespace;
+      new RegExp(`^\\s*use\\s+${this.escapeRegex(packageName).replace(/\//g, '\\\\\\\\')}(\\\\[\\w]+)*\\s*;`, 'gm'),
+      // require 'vendor/package/...'
+      new RegExp(`(require|include)(_once)?\\s+['"].*${this.escapeRegex(packageName)}.*['"]`, 'gm')
+    ];
+
+    // Dart patterns
+    const dartPatterns = [
+      // import 'package:package_name/...';
+      new RegExp(`^\\s*import\\s+['"]package:${this.escapeRegex(packageName)}/[^'"]*['"]\\s*;`, 'gm'),
+      // export 'package:package_name/...';
+      new RegExp(`^\\s*export\\s+['"]package:${this.escapeRegex(packageName)}/[^'"]*['"]\\s*;`, 'gm')
+    ];
+
+    // Elixir patterns
+    const elixirPatterns = [
+      // {:package_name, "~> 1.0"}
+      new RegExp(`\\{:${this.escapeRegex(packageName)}\\s*,`, 'g')
+    ];
+
     // Check all patterns
     const allPatterns = [
       ...jsPatterns.map(p => ({ pattern: p, language: 'javascript' })),
       ...pythonPatterns.map(p => ({ pattern: p, language: 'python' })),
       ...javaPatterns.map(p => ({ pattern: p, language: 'java' })),
-      ...goPatterns.map(p => ({ pattern: p, language: 'go' }))
+      ...goPatterns.map(p => ({ pattern: p, language: 'go' })),
+      ...csharpPatterns.map(p => ({ pattern: p, language: 'csharp' })),
+      ...rustPatterns.map(p => ({ pattern: p, language: 'rust' })),
+      ...rubyPatterns.map(p => ({ pattern: p, language: 'ruby' })),
+      ...phpPatterns.map(p => ({ pattern: p, language: 'php' })),
+      ...dartPatterns.map(p => ({ pattern: p, language: 'dart' })),
+      ...elixirPatterns.map(p => ({ pattern: p, language: 'elixir' }))
     ];
 
     for (const { pattern, language } of allPatterns) {
@@ -169,12 +225,18 @@ class ImportDetector {
    */
   isSourceFile(filename) {
     const extensions = [
-      '.js', '.jsx', '.ts', '.tsx', '.mjs',
+      '.js', '.jsx', '.ts', '.tsx', '.mjs', '.cjs',
       '.py', '.pyi',
-      '.java',
+      '.java', '.kt', '.kts', '.scala',
       '.go',
-      '.rb',
-      '.php'
+      '.rs',
+      '.rb', '.erb',
+      '.php',
+      '.cs', '.fs', '.vb',
+      '.dart',
+      '.swift',
+      '.ex', '.exs',
+      '.hs'
     ];
     return extensions.some(ext => filename.endsWith(ext));
   }
@@ -189,9 +251,15 @@ class ImportDetector {
     if (statement.includes('require(')) confidence = 0.9;
     if (statement.includes('import ') && language === 'javascript') confidence = 0.95;
     if (statement.includes('from ') && language === 'python') confidence = 0.95;
+    if (statement.includes('using ') && language === 'csharp') confidence = 0.95;
+    if (statement.includes('use ') && language === 'rust') confidence = 0.95;
+    if (statement.includes('extern crate') && language === 'rust') confidence = 0.98;
+    if (statement.includes('require ') && language === 'ruby') confidence = 0.9;
+    if (statement.includes('use ') && language === 'php') confidence = 0.9;
+    if (statement.includes('package:') && language === 'dart') confidence = 0.95;
 
     // Lower confidence for commented imports
-    if (statement.trim().startsWith('//') || statement.trim().startsWith('#')) {
+    if (statement.trim().startsWith('//') || statement.trim().startsWith('#') || statement.trim().startsWith('--')) {
       confidence = 0.2;
     }
 

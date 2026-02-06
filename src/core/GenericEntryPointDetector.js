@@ -166,6 +166,43 @@ class GenericEntryPointDetector {
       // Fastify
       { regex: /fastify\.(get|post|put|delete|patch)\s*\(/i, framework: 'Fastify', confidence: 0.95 },
 
+      // ASP.NET Core Minimal API
+      { regex: /app\.Map(Get|Post|Put|Delete|Patch)\s*\(/i, framework: 'ASP.NET Minimal API', confidence: 0.98 },
+      { regex: /\[Http(Get|Post|Put|Delete|Patch)\s*(\(|])/i, framework: 'ASP.NET Controller', confidence: 0.95 },
+      { regex: /\[ApiController\]/i, framework: 'ASP.NET Controller', confidence: 0.90 },
+      { regex: /\[Route\s*\(/i, framework: 'ASP.NET Controller', confidence: 0.85 },
+
+      // Rails (Ruby)
+      { regex: /\b(get|post|put|patch|delete)\s+['"][^'"]+['"]\s*,?\s*(to:|=>)/i, framework: 'Rails Router', confidence: 0.95 },
+      { regex: /resources?\s+:[\w]+/i, framework: 'Rails Router', confidence: 0.90 },
+      { regex: /class\s+\w+Controller\s*<\s*Application(Controller|::Base)/i, framework: 'Rails Controller', confidence: 0.95 },
+
+      // Sinatra (Ruby)
+      { regex: /(get|post|put|patch|delete)\s+['"]\/[^'"]*['"]\s+do/i, framework: 'Sinatra', confidence: 0.95 },
+
+      // Laravel (PHP)
+      { regex: /Route::(get|post|put|patch|delete)\s*\(/i, framework: 'Laravel Router', confidence: 0.98 },
+      { regex: /class\s+\w+Controller\s+extends\s+Controller/i, framework: 'Laravel Controller', confidence: 0.90 },
+
+      // Symfony (PHP)
+      { regex: /#\[Route\s*\(/i, framework: 'Symfony', confidence: 0.95 },
+      { regex: /@Route\s*\(/i, framework: 'Symfony', confidence: 0.95 },
+
+      // Actix-web (Rust)
+      { regex: /#\[(get|post|put|delete|patch)\s*\("/i, framework: 'Actix-web', confidence: 0.98 },
+      { regex: /web::(get|post|put|delete|patch|resource)\s*\(/i, framework: 'Actix-web', confidence: 0.95 },
+
+      // Rocket (Rust)
+      { regex: /#\[(get|post|put|delete|patch)\s*\("/i, framework: 'Rocket', confidence: 0.95 },
+      { regex: /routes!\s*\[/i, framework: 'Rocket', confidence: 0.90 },
+
+      // Axum (Rust)
+      { regex: /Router::new\(\)\.route\(/i, framework: 'Axum', confidence: 0.95 },
+
+      // Phoenix (Elixir)
+      { regex: /(get|post|put|patch|delete)\s+"[^"]+"\s*,\s*\w+Controller/i, framework: 'Phoenix', confidence: 0.95 },
+      { regex: /scope\s+"[^"]+"\s+do/i, framework: 'Phoenix', confidence: 0.80 },
+
       // Generic patterns (lower confidence)
       { regex: /function\s+handle(Request|Get|Post|Put|Delete|Patch)/i, framework: 'Generic HTTP Handler', confidence: 0.70 },
       { regex: /def\s+handle_(request|get|post|put|delete|patch)/i, framework: 'Generic HTTP Handler', confidence: 0.70 },
@@ -215,7 +252,24 @@ class GenericEntryPointDetector {
       { regex: /if\s+__FILE__\s*==\s*\$0/i, lang: 'Ruby', confidence: 1.0 },
 
       // PHP
-      { regex: /if\s*\(\s*__FILE__\s*==\s*realpath\(\$_SERVER\['SCRIPT_FILENAME'\]\)\s*\)/i, lang: 'PHP', confidence: 1.0 }
+      { regex: /if\s*\(\s*__FILE__\s*==\s*realpath\(\$_SERVER\['SCRIPT_FILENAME'\]\)\s*\)/i, lang: 'PHP', confidence: 1.0 },
+
+      // C#
+      { regex: /static\s+(async\s+)?Task\s+Main\s*\(/i, lang: 'C#', confidence: 1.0 },
+      { regex: /static\s+void\s+Main\s*\(/i, lang: 'C#', confidence: 1.0 },
+      { regex: /WebApplication\.CreateBuilder/i, lang: 'C# ASP.NET', confidence: 0.98 },
+      { regex: /Host\.CreateDefaultBuilder/i, lang: 'C# ASP.NET', confidence: 0.95 },
+
+      // Dart/Flutter
+      { regex: /void\s+main\s*\(\s*\)\s*(async\s*)?\{/i, lang: 'Dart', confidence: 1.0 },
+      { regex: /runApp\s*\(/i, lang: 'Flutter', confidence: 0.95 },
+
+      // Elixir
+      { regex: /def\s+start\s*\(\s*_type\s*,\s*_args\s*\)/i, lang: 'Elixir', confidence: 1.0 },
+
+      // Scala
+      { regex: /def\s+main\s*\(\s*args\s*:\s*Array\[String\]\s*\)/i, lang: 'Scala', confidence: 1.0 },
+      { regex: /extends\s+App\b/i, lang: 'Scala', confidence: 0.90 }
     ];
 
     for (const pattern of patterns) {
@@ -230,7 +284,9 @@ class GenericEntryPointDetector {
     }
 
     // Also check filename
-    if (['main.js', 'main.ts', 'main.py', 'main.go', 'main.rs', 'Main.java'].includes(basename)) {
+    if (['main.js', 'main.ts', 'main.py', 'main.go', 'main.rs', 'Main.java',
+         'main.dart', 'Main.scala', 'Main.kt', 'Program.cs', 'Startup.cs',
+         'app.rb', 'application.rb', 'index.php', 'main.ex'].includes(basename)) {
       return {
         type: 'MAIN_FUNCTION',
         confidence: 0.8,
@@ -328,7 +384,25 @@ class GenericEntryPointDetector {
       { regex: /server\.listen\s*\(/i, framework: 'Node.js Server', confidence: 0.90 },
       { regex: /\.run\s*\(\s*host\s*=/i, framework: 'Flask/FastAPI Server', confidence: 0.90 },
       { regex: /@SpringBootApplication/i, framework: 'Spring Boot', confidence: 0.95 },
-      { regex: /http\.ListenAndServe\s*\(/i, framework: 'Go HTTP Server', confidence: 0.95 }
+      { regex: /http\.ListenAndServe\s*\(/i, framework: 'Go HTTP Server', confidence: 0.95 },
+
+      // ASP.NET
+      { regex: /WebApplication\.Create/i, framework: 'ASP.NET', confidence: 0.95 },
+      { regex: /builder\.Build\(\).*app\.Run\(\)/s, framework: 'ASP.NET', confidence: 0.90 },
+      { regex: /UseStartup\s*</i, framework: 'ASP.NET', confidence: 0.90 },
+
+      // Rails
+      { regex: /Rails\.application\.initialize!/i, framework: 'Rails', confidence: 0.95 },
+
+      // Laravel
+      { regex: /\$app\s*=\s*require.*bootstrap\/app/i, framework: 'Laravel', confidence: 0.95 },
+
+      // Phoenix (Elixir)
+      { regex: /Endpoint\.start_link/i, framework: 'Phoenix', confidence: 0.90 },
+
+      // Actix (Rust)
+      { regex: /HttpServer::new\s*\(/i, framework: 'Actix-web', confidence: 0.95 },
+      { regex: /\.bind\s*\(\s*["']\d+\.\d+\.\d+\.\d+:\d+["']\s*\)/i, framework: 'Rust HTTP Server', confidence: 0.85 }
     ];
 
     for (const pattern of patterns) {

@@ -420,6 +420,330 @@ class DependencyResolver {
       return [];
     }
   }
+
+  /**
+   * Resolves NuGet transitive dependencies using dotnet list package
+   */
+  resolveNuGetDependencies(manifestPath) {
+    try {
+      this.logger.info('Resolving NuGet transitive dependencies', { manifestPath });
+
+      const manifestDir = path.dirname(manifestPath);
+
+      // Check if dotnet CLI is available
+      try {
+        execSync('dotnet --version', { stdio: 'ignore' });
+      } catch (error) {
+        this.logger.warn('dotnet CLI not found in PATH, trying packages.lock.json fallback');
+        return this.resolveNuGetFromLockfile(manifestDir);
+      }
+
+      // Run dotnet list package --include-transitive --format json
+      const command = 'dotnet list package --include-transitive --format json';
+
+      this.logger.debug('Executing dotnet command', { command, dir: manifestDir });
+
+      const output = execSync(command, {
+        cwd: manifestDir,
+        timeout: this.timeout,
+        stdio: 'pipe'
+      }).toString();
+
+      return this.parseDotnetListOutput(output);
+
+    } catch (error) {
+      this.logger.error('Failed to resolve NuGet dependencies via dotnet CLI', {
+        error: error.message,
+        manifestPath
+      });
+      // Fallback to lockfile parsing
+      return this.resolveNuGetFromLockfile(path.dirname(manifestPath));
+    }
+  }
+
+  /**
+   * Parses dotnet list package JSON output
+   */
+  parseDotnetListOutput(output) {
+    const dependencies = [];
+
+    try {
+      const data = JSON.parse(output);
+
+      if (!data.projects) return dependencies;
+
+      for (const project of data.projects) {
+        if (!project.frameworks) continue;
+
+        for (const framework of project.frameworks) {
+          // Top-level packages (direct)
+          if (framework.topLevelPackages) {
+            for (const pkg of framework.topLevelPackages) {
+              dependencies.push({
+                name: pkg.id,
+                version: pkg.resolvedVersion || pkg.requestedVersion,
+                ecosystem: 'nuget',
+                transitive: false
+              });
+            }
+          }
+
+          // Transitive packages
+          if (framework.transitivePackages) {
+            for (const pkg of framework.transitivePackages) {
+              dependencies.push({
+                name: pkg.id,
+                version: pkg.resolvedVersion,
+                ecosystem: 'nuget',
+                transitive: true
+              });
+            }
+          }
+        }
+      }
+    } catch (error) {
+      // If JSON parsing fails, try line-based parsing (older dotnet versions)
+      return this.parseDotnetListTextOutput(output);
+    }
+
+    this.logger.info('Resolved NuGet dependencies', {
+      count: dependencies.length,
+      transitive: dependencies.filter(d => d.transitive).length
+    });
+
+    return dependencies;
+  }
+
+  /**
+   * Parses dotnet list package text output (fallback for older dotnet versions)
+   */
+  parseDotnetListTextOutput(output) {
+    const dependencies = [];
+    const lines = output.split('\n');
+    let isTransitiveSection = false;
+
+    for (const line of lines) {
+      const trimmed = line.trim();
+
+      if (trimmed.includes('Transitive Package')) {
+        isTransitiveSection = true;
+        continue;
+      }
+      if (trimmed.includes('Top-level Package')) {
+        isTransitiveSection = false;
+        continue;
+      }
+
+      // Match: > PackageName    RequestedVersion    ResolvedVersion
+      const match = trimmed.match(/^>\s+(\S+)\s+(\S+)(?:\s+(\S+))?/);
+      if (match) {
+        dependencies.push({
+          name: match[1],
+          version: match[3] || match[2],
+          ecosystem: 'nuget',
+          transitive: isTransitiveSection
+        });
+      }
+    }
+
+    return dependencies;
+  }
+
+  /**
+   * Resolves NuGet dependencies from packages.lock.json
+   */
+  resolveNuGetFromLockfile(projectDir) {
+    try {
+      const lockfilePath = path.join(projectDir, 'packages.lock.json');
+
+      if (!fs.existsSync(lockfilePath)) {
+        this.logger.debug('No packages.lock.json found');
+        return [];
+      }
+
+      const content = fs.readFileSync(lockfilePath, 'utf-8');
+      const lockfile = JSON.parse(content);
+      const dependencies = [];
+
+      if (!lockfile.dependencies) return dependencies;
+
+      // Iterate over target frameworks
+      for (const [framework, packages] of Object.entries(lockfile.dependencies)) {
+        for (const [name, info] of Object.entries(packages)) {
+          const isTransitive = info.type === 'Transitive';
+          dependencies.push({
+            name,
+            version: info.resolved,
+            ecosystem: 'nuget',
+            transitive: isTransitive,
+            framework
+          });
+        }
+      }
+
+      this.logger.info('Resolved NuGet dependencies from lockfile', {
+        count: dependencies.length,
+        transitive: dependencies.filter(d => d.transitive).length
+      });
+
+      return dependencies;
+
+    } catch (error) {
+      this.logger.warn('Failed to parse NuGet lockfile', { error: error.message });
+      return [];
+    }
+  }
+
+  /**
+   * Resolves Go transitive dependencies using go list
+   */
+  resolveGoDependencies(manifestPath) {
+    try {
+      this.logger.info('Resolving Go transitive dependencies', { manifestPath });
+
+      const manifestDir = path.dirname(manifestPath);
+
+      try {
+        execSync('go version', { stdio: 'ignore' });
+      } catch (error) {
+        this.logger.warn('Go not found in PATH, skipping transitive resolution');
+        return [];
+      }
+
+      const output = execSync('go list -m -json all', {
+        cwd: manifestDir,
+        timeout: this.timeout,
+        stdio: 'pipe'
+      }).toString();
+
+      const dependencies = [];
+      // Output is multiple JSON objects (not an array), split by }{ boundary
+      const jsonObjects = output.split('\n}\n{').map((obj, i, arr) => {
+        if (i === 0) return obj + '}';
+        if (i === arr.length - 1) return '{' + obj;
+        return '{' + obj + '}';
+      });
+
+      for (const jsonStr of jsonObjects) {
+        try {
+          const mod = JSON.parse(jsonStr);
+          if (mod.Main) continue; // Skip the main module
+
+          dependencies.push({
+            name: mod.Path,
+            version: (mod.Version || '').replace(/^v/, ''),
+            ecosystem: 'go',
+            transitive: mod.Indirect || false
+          });
+        } catch (e) {
+          // Skip unparseable entries
+        }
+      }
+
+      this.logger.info('Resolved Go dependencies', { count: dependencies.length });
+      return dependencies;
+
+    } catch (error) {
+      this.logger.warn('Failed to resolve Go dependencies', { error: error.message });
+      return [];
+    }
+  }
+
+  /**
+   * Resolves Rust transitive dependencies from Cargo.lock
+   */
+  resolveRustDependencies(manifestPath) {
+    try {
+      this.logger.info('Resolving Rust transitive dependencies', { manifestPath });
+
+      const manifestDir = path.dirname(manifestPath);
+      const lockfilePath = path.join(manifestDir, 'Cargo.lock');
+
+      if (!fs.existsSync(lockfilePath)) {
+        this.logger.debug('No Cargo.lock found');
+        return [];
+      }
+
+      const content = fs.readFileSync(lockfilePath, 'utf-8');
+      const dependencies = [];
+
+      // Parse TOML [[package]] sections
+      const packageSections = content.split('[[package]]').slice(1);
+
+      for (const section of packageSections) {
+        const nameMatch = section.match(/name\s*=\s*"([^"]+)"/);
+        const versionMatch = section.match(/version\s*=\s*"([^"]+)"/);
+
+        if (nameMatch && versionMatch) {
+          dependencies.push({
+            name: nameMatch[1],
+            version: versionMatch[1],
+            ecosystem: 'cargo',
+            transitive: true // Cargo.lock contains all resolved deps
+          });
+        }
+      }
+
+      this.logger.info('Resolved Rust dependencies from Cargo.lock', { count: dependencies.length });
+      return dependencies;
+
+    } catch (error) {
+      this.logger.warn('Failed to resolve Rust dependencies', { error: error.message });
+      return [];
+    }
+  }
+
+  /**
+   * Resolves Ruby transitive dependencies from Gemfile.lock
+   */
+  resolveRubyDependencies(manifestPath) {
+    try {
+      this.logger.info('Resolving Ruby transitive dependencies', { manifestPath });
+
+      const manifestDir = path.dirname(manifestPath);
+      const lockfilePath = path.join(manifestDir, 'Gemfile.lock');
+
+      if (!fs.existsSync(lockfilePath)) {
+        this.logger.debug('No Gemfile.lock found');
+        return [];
+      }
+
+      const content = fs.readFileSync(lockfilePath, 'utf-8');
+      const dependencies = [];
+      let inSpecs = false;
+
+      for (const line of content.split('\n')) {
+        if (line.trim() === 'specs:') {
+          inSpecs = true;
+          continue;
+        }
+        if (inSpecs && line.match(/^\S/)) {
+          inSpecs = false;
+          continue;
+        }
+
+        if (inSpecs) {
+          // Match gem entries: "    gem_name (version)"
+          const match = line.match(/^\s{4}(\S+)\s+\(([^)]+)\)/);
+          if (match) {
+            dependencies.push({
+              name: match[1],
+              version: match[2],
+              ecosystem: 'rubygems',
+              transitive: true
+            });
+          }
+        }
+      }
+
+      this.logger.info('Resolved Ruby dependencies from Gemfile.lock', { count: dependencies.length });
+      return dependencies;
+
+    } catch (error) {
+      this.logger.warn('Failed to resolve Ruby dependencies', { error: error.message });
+      return [];
+    }
+  }
 }
 
 module.exports = DependencyResolver;

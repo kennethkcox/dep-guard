@@ -296,6 +296,22 @@ class DepGuardScanner2 {
                     result = await this.dependencyResolver.resolvePythonDependencies(manifest.path);
                     break;
 
+                case 'nuget':
+                    result = await this.dependencyResolver.resolveNuGetDependencies(manifest.path);
+                    break;
+
+                case 'go':
+                    result = await this.dependencyResolver.resolveGoDependencies(manifest.path);
+                    break;
+
+                case 'cargo':
+                    result = await this.dependencyResolver.resolveRustDependencies(manifest.path);
+                    break;
+
+                case 'rubygems':
+                    result = await this.dependencyResolver.resolveRubyDependencies(manifest.path);
+                    break;
+
                 default:
                     // No transitive resolution for other ecosystems yet
                     result = [];
@@ -385,6 +401,15 @@ class DepGuardScanner2 {
             case 'pub':
                 return this.extractPubDependencies(content, manifest);
 
+            case 'swift':
+                return this.extractSwiftDependencies(content, manifest);
+
+            case 'hex':
+                return this.extractHexDependencies(content, manifest);
+
+            case 'hackage':
+                return this.extractHaskellDependencies(content, manifest);
+
             default:
                 console.warn(`  [!]Unsupported ecosystem: ${manifest.ecosystem}`);
                 return [];
@@ -448,7 +473,7 @@ class DepGuardScanner2 {
                 }
             }
         } else if (manifest.filename === 'pyproject.toml') {
-            // Basic TOML parsing for dependencies
+            // Basic TOML parsing for Poetry dependencies
             const depSection = content.match(/\[tool\.poetry\.dependencies\](.*?)(\n\[|$)/s);
             if (depSection) {
                 const lines = depSection[1].split('\n');
@@ -458,6 +483,45 @@ class DepGuardScanner2 {
                         deps.push({
                             name: match[1],
                             version: match[2].replace(/[\^~]/g, ''),
+                            ecosystem: 'pypi',
+                            manifest: manifest.path
+                        });
+                    }
+                }
+            }
+
+            // PEP 621 project.dependencies
+            const pep621Section = content.match(/\[project\]\s*\n([\s\S]*?)(\n\[|$)/);
+            if (pep621Section) {
+                const depsMatch = pep621Section[1].match(/dependencies\s*=\s*\[([\s\S]*?)\]/);
+                if (depsMatch) {
+                    const depLines = depsMatch[1].split('\n');
+                    for (const line of depLines) {
+                        const match = line.match(/["']([a-zA-Z0-9\-_]+)\s*([>=<~!]+\s*[\d.]+)?["']/);
+                        if (match) {
+                            deps.push({
+                                name: match[1],
+                                version: match[2] ? match[2].replace(/[>=<~!\s]/g, '') : 'latest',
+                                ecosystem: 'pypi',
+                                manifest: manifest.path
+                            });
+                        }
+                    }
+                }
+            }
+        } else if (manifest.filename === 'setup.cfg') {
+            // Parse setup.cfg [options] install_requires
+            const installReqSection = content.match(/install_requires\s*=\s*\n?([\s\S]*?)(?=\n\S|\n\[|$)/);
+            if (installReqSection) {
+                const lines = installReqSection[1].split('\n');
+                for (const line of lines) {
+                    const trimmed = line.trim();
+                    if (!trimmed || trimmed.startsWith('#')) continue;
+                    const match = trimmed.match(/^([a-zA-Z0-9\-_]+)(==|>=|<=|~=|!=)?(.+)?$/);
+                    if (match) {
+                        deps.push({
+                            name: match[1],
+                            version: match[3] ? match[3].trim() : 'latest',
                             ecosystem: 'pypi',
                             manifest: manifest.path
                         });
@@ -495,6 +559,18 @@ class DepGuardScanner2 {
                 deps.push({
                     name: `${match[2]}:${match[3]}`,
                     version: match[4],
+                    ecosystem: 'maven',
+                    manifest: manifest.path
+                });
+            }
+        } else if (manifest.filename === 'build.sbt') {
+            // Extract SBT dependencies: "org" %% "artifact" % "version"
+            const sbtRegex = /"([^"]+)"\s*%%?\s*"([^"]+)"\s*%\s*"([^"]+)"/g;
+            let match;
+            while ((match = sbtRegex.exec(content)) !== null) {
+                deps.push({
+                    name: `${match[1]}:${match[2]}`,
+                    version: match[3],
                     ecosystem: 'maven',
                     manifest: manifest.path
                 });
@@ -635,16 +711,18 @@ class DepGuardScanner2 {
     }
 
     /**
-     * Extract NuGet (.NET) dependencies from .csproj files
+     * Extract NuGet (.NET) dependencies from .csproj, .fsproj, .vbproj,
+     * packages.config, .nuspec, Directory.Build.props, Directory.Packages.props files
      */
     extractNuGetDependencies(content, manifest) {
         const deps = [];
 
         try {
+            let match;
+
             // Parse PackageReference elements (modern .NET Core/5+/6+ format)
             // <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
             const packageRefRegex = /<PackageReference\s+Include=["']([^"']+)["']\s+Version=["']([^"']+)["']\s*\/>/gi;
-            let match;
             while ((match = packageRefRegex.exec(content)) !== null) {
                 deps.push({
                     name: match[1],
@@ -655,12 +733,8 @@ class DepGuardScanner2 {
             }
 
             // Also handle PackageReference with Version as child element
-            // <PackageReference Include="Package.Name">
-            //   <Version>1.0.0</Version>
-            // </PackageReference>
             const packageRefBlockRegex = /<PackageReference\s+Include=["']([^"']+)["'][^>]*>[\s\S]*?<Version>([^<]+)<\/Version>[\s\S]*?<\/PackageReference>/gi;
             while ((match = packageRefBlockRegex.exec(content)) !== null) {
-                // Avoid duplicates
                 if (!deps.find(d => d.name === match[1])) {
                     deps.push({
                         name: match[1],
@@ -671,8 +745,20 @@ class DepGuardScanner2 {
                 }
             }
 
+            // Handle PackageReference without Version (version may come from Directory.Packages.props)
+            const packageRefNoVersionRegex = /<PackageReference\s+Include=["']([^"']+)["']\s*\/>/gi;
+            while ((match = packageRefNoVersionRegex.exec(content)) !== null) {
+                if (!deps.find(d => d.name === match[1])) {
+                    deps.push({
+                        name: match[1],
+                        version: 'centrally-managed',
+                        ecosystem: 'nuget',
+                        manifest: manifest.path
+                    });
+                }
+            }
+
             // Parse legacy packages.config format
-            // <package id="Newtonsoft.Json" version="13.0.1" targetFramework="net48" />
             if (manifest.filename === 'packages.config') {
                 const packageRegex = /<package\s+id=["']([^"']+)["']\s+version=["']([^"']+)["'][^>]*\/>/gi;
                 while ((match = packageRegex.exec(content)) !== null) {
@@ -685,7 +771,56 @@ class DepGuardScanner2 {
                 }
             }
 
-            // Validate dependency count
+            // Parse .nuspec format
+            if (manifest.filename.endsWith('.nuspec')) {
+                const nuspecDepRegex = /<dependency\s+id=["']([^"']+)["']\s+version=["']([^"']+)["'][^>]*\/?>/gi;
+                while ((match = nuspecDepRegex.exec(content)) !== null) {
+                    deps.push({
+                        name: match[1],
+                        version: match[2].replace(/[\[\]\(\)]/g, '').split(',')[0].trim(),
+                        ecosystem: 'nuget',
+                        manifest: manifest.path
+                    });
+                }
+            }
+
+            // Parse Directory.Packages.props (central package version management)
+            if (manifest.filename === 'Directory.Packages.props') {
+                const pkgVersionRegex = /<PackageVersion\s+Include=["']([^"']+)["']\s+Version=["']([^"']+)["']\s*\/>/gi;
+                while ((match = pkgVersionRegex.exec(content)) !== null) {
+                    deps.push({
+                        name: match[1],
+                        version: match[2].replace(/[\[\]\(\)]/g, '').split(',')[0].trim(),
+                        ecosystem: 'nuget',
+                        manifest: manifest.path
+                    });
+                }
+            }
+
+            // Parse packages.lock.json
+            if (manifest.filename === 'packages.lock.json') {
+                try {
+                    const lockData = JSON.parse(content);
+                    if (lockData.dependencies) {
+                        for (const [framework, packages] of Object.entries(lockData.dependencies)) {
+                            for (const [name, info] of Object.entries(packages)) {
+                                if (!deps.find(d => d.name === name)) {
+                                    deps.push({
+                                        name,
+                                        version: info.resolved || 'unknown',
+                                        ecosystem: 'nuget',
+                                        manifest: manifest.path,
+                                        transitive: info.type === 'Transitive'
+                                    });
+                                }
+                            }
+                        }
+                    }
+                } catch (e) {
+                    // Fall through to error handler
+                }
+            }
+
             if (deps.length > 0) {
                 Validator.validateDependencyCount(deps.length);
             }
@@ -698,6 +833,165 @@ class DepGuardScanner2 {
                 { ecosystem: 'nuget' }
             );
         }
+    }
+
+    /**
+     * Extract Dart/Flutter dependencies from pubspec.yaml
+     */
+    extractPubDependencies(content, manifest) {
+        const deps = [];
+
+        if (manifest.filename === 'pubspec.yaml') {
+            // Simple YAML parsing for dependencies section
+            const sections = content.split(/\n(?=\w)/);
+            for (const section of sections) {
+                if (section.startsWith('dependencies:') || section.startsWith('dev_dependencies:')) {
+                    const lines = section.split('\n').slice(1);
+                    for (const line of lines) {
+                        // Match: "  package_name: ^1.0.0" or "  package_name: any"
+                        const match = line.match(/^\s{2}(\w[\w_-]*)\s*:\s*[\^~]?(\d[\d.]*\S*)/);
+                        if (match) {
+                            deps.push({
+                                name: match[1],
+                                version: match[2],
+                                ecosystem: 'pub',
+                                manifest: manifest.path
+                            });
+                        }
+                    }
+                }
+            }
+        }
+
+        return deps;
+    }
+
+    /**
+     * Extract Swift Package Manager dependencies from Package.swift
+     */
+    extractSwiftDependencies(content, manifest) {
+        const deps = [];
+
+        if (manifest.filename === 'Package.swift') {
+            // Match .package(url: "https://github.com/org/repo.git", from: "1.0.0")
+            const urlFromRegex = /\.package\s*\(\s*url\s*:\s*"([^"]+)"\s*,\s*from\s*:\s*"([^"]+)"/g;
+            let match;
+            while ((match = urlFromRegex.exec(content)) !== null) {
+                const url = match[1];
+                const name = url.replace(/\.git$/, '').split('/').pop();
+                deps.push({
+                    name: name,
+                    version: match[2],
+                    ecosystem: 'swift',
+                    manifest: manifest.path,
+                    url: url
+                });
+            }
+
+            // Match .package(url: "...", .upToNextMajor(from: "1.0.0"))
+            const upToNextRegex = /\.package\s*\(\s*url\s*:\s*"([^"]+)"\s*,\s*\.upToNext(?:Major|Minor)\s*\(\s*from\s*:\s*"([^"]+)"\s*\)/g;
+            while ((match = upToNextRegex.exec(content)) !== null) {
+                const url = match[1];
+                const name = url.replace(/\.git$/, '').split('/').pop();
+                if (!deps.find(d => d.name === name)) {
+                    deps.push({
+                        name: name,
+                        version: match[2],
+                        ecosystem: 'swift',
+                        manifest: manifest.path,
+                        url: url
+                    });
+                }
+            }
+        }
+
+        return deps;
+    }
+
+    /**
+     * Extract Elixir dependencies from mix.exs
+     */
+    extractHexDependencies(content, manifest) {
+        const deps = [];
+
+        if (manifest.filename === 'mix.exs') {
+            // Match {:package_name, "~> 1.0"} or {:package_name, ">= 1.0.0"}
+            const depRegex = /\{:(\w+)\s*,\s*"([^"]+)"\s*\}/g;
+            let match;
+            while ((match = depRegex.exec(content)) !== null) {
+                deps.push({
+                    name: match[1],
+                    version: match[2].replace(/[~>=<\s]/g, ''),
+                    ecosystem: 'hex',
+                    manifest: manifest.path
+                });
+            }
+
+            // Match {:package_name, "~> 1.0", only: :test}
+            const depWithOptsRegex = /\{:(\w+)\s*,\s*"([^"]+)"\s*,\s*[^}]+\}/g;
+            while ((match = depWithOptsRegex.exec(content)) !== null) {
+                if (!deps.find(d => d.name === match[1])) {
+                    deps.push({
+                        name: match[1],
+                        version: match[2].replace(/[~>=<\s]/g, ''),
+                        ecosystem: 'hex',
+                        manifest: manifest.path
+                    });
+                }
+            }
+        }
+
+        return deps;
+    }
+
+    /**
+     * Extract Haskell dependencies from package.yaml or .cabal files
+     */
+    extractHaskellDependencies(content, manifest) {
+        const deps = [];
+
+        if (manifest.filename === 'package.yaml') {
+            // Match dependencies section in hpack format
+            const depSection = content.match(/dependencies:\s*\n((?:\s+-\s+.+\n?)*)/);
+            if (depSection) {
+                const lines = depSection[1].split('\n');
+                for (const line of lines) {
+                    // Match: "  - package-name >= 1.0"
+                    const match = line.match(/^\s+-\s+([a-zA-Z][\w-]*)\s*(.+)?$/);
+                    if (match) {
+                        const version = match[2] ? match[2].replace(/[>=<\s^]/g, '').trim() : 'any';
+                        deps.push({
+                            name: match[1],
+                            version: version || 'any',
+                            ecosystem: 'hackage',
+                            manifest: manifest.path
+                        });
+                    }
+                }
+            }
+        } else if (manifest.filename.endsWith('.cabal')) {
+            // Match build-depends lines
+            const buildDepsRegex = /build-depends\s*:\s*([\s\S]*?)(?=\n\S|\n\n|$)/gi;
+            let section;
+            while ((section = buildDepsRegex.exec(content)) !== null) {
+                const depsStr = section[1];
+                const depEntries = depsStr.split(',');
+                for (const entry of depEntries) {
+                    const match = entry.trim().match(/^([a-zA-Z][\w-]*)\s*(.*)?$/);
+                    if (match && match[1] !== 'base') {
+                        const version = match[2] ? match[2].replace(/[>=<&|\s^]/g, '').trim() : 'any';
+                        deps.push({
+                            name: match[1],
+                            version: version || 'any',
+                            ecosystem: 'hackage',
+                            manifest: manifest.path
+                        });
+                    }
+                }
+            }
+        }
+
+        return deps;
     }
 
     /**
