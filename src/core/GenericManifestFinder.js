@@ -872,6 +872,105 @@ class GenericManifestFinder {
     }
 
     /**
+     * Detect monorepo workspace configuration and resolve workspace paths
+     */
+    detectWorkspaces(projectRoot) {
+        const workspaces = [];
+
+        try {
+            // npm/yarn workspaces from package.json
+            const rootPkgJson = path.join(projectRoot, 'package.json');
+            if (fs.existsSync(rootPkgJson)) {
+                const content = fs.readFileSync(rootPkgJson, 'utf8');
+                const data = JSON.parse(content);
+                if (data.workspaces) {
+                    const wsPatterns = Array.isArray(data.workspaces)
+                        ? data.workspaces
+                        : (data.workspaces.packages || []);
+                    for (const pattern of wsPatterns) {
+                        workspaces.push({ pattern, source: 'package.json', ecosystem: 'npm' });
+                    }
+                }
+            }
+
+            // pnpm-workspace.yaml
+            const pnpmWorkspace = path.join(projectRoot, 'pnpm-workspace.yaml');
+            if (fs.existsSync(pnpmWorkspace)) {
+                const content = fs.readFileSync(pnpmWorkspace, 'utf8');
+                const packagesMatch = content.match(/packages:\s*\n((?:\s+-\s+.+\n?)*)/);
+                if (packagesMatch) {
+                    const lines = packagesMatch[1].split('\n');
+                    for (const line of lines) {
+                        const match = line.match(/^\s+-\s+['"]?([^'"]+)['"]?\s*$/);
+                        if (match) {
+                            workspaces.push({ pattern: match[1], source: 'pnpm-workspace.yaml', ecosystem: 'npm' });
+                        }
+                    }
+                }
+            }
+
+            // lerna.json
+            const lernaJson = path.join(projectRoot, 'lerna.json');
+            if (fs.existsSync(lernaJson)) {
+                const content = fs.readFileSync(lernaJson, 'utf8');
+                const data = JSON.parse(content);
+                if (data.packages) {
+                    for (const pattern of data.packages) {
+                        workspaces.push({ pattern, source: 'lerna.json', ecosystem: 'npm' });
+                    }
+                }
+            }
+
+            // Cargo workspace (Rust)
+            const cargoToml = path.join(projectRoot, 'Cargo.toml');
+            if (fs.existsSync(cargoToml)) {
+                const content = fs.readFileSync(cargoToml, 'utf8');
+                const wsSection = content.match(/\[workspace\]\s*\nmembers\s*=\s*\[([\s\S]*?)\]/);
+                if (wsSection) {
+                    const members = wsSection[1].match(/"([^"]+)"/g);
+                    if (members) {
+                        for (const m of members) {
+                            workspaces.push({ pattern: m.replace(/"/g, ''), source: 'Cargo.toml', ecosystem: 'cargo' });
+                        }
+                    }
+                }
+            }
+
+            // Go workspace (go.work)
+            const goWork = path.join(projectRoot, 'go.work');
+            if (fs.existsSync(goWork)) {
+                const content = fs.readFileSync(goWork, 'utf8');
+                const useMatch = content.match(/use\s*\(([\s\S]*?)\)/);
+                if (useMatch) {
+                    const dirs = useMatch[1].split('\n').map(l => l.trim()).filter(l => l && !l.startsWith('//'));
+                    for (const dir of dirs) {
+                        workspaces.push({ pattern: dir, source: 'go.work', ecosystem: 'go' });
+                    }
+                }
+            }
+
+            // .NET solution files (.sln)
+            this.walkDirectory(projectRoot, 0, (filePath) => {
+                if (filePath.endsWith('.sln')) {
+                    const content = fs.readFileSync(filePath, 'utf8');
+                    const projMatches = content.matchAll(/Project\("[^"]*"\)\s*=\s*"[^"]*"\s*,\s*"([^"]+\.(csproj|fsproj|vbproj))"/gi);
+                    for (const match of projMatches) {
+                        const projDir = path.dirname(match[1]).replace(/\\/g, '/');
+                        if (projDir && projDir !== '.') {
+                            workspaces.push({ pattern: projDir, source: path.basename(filePath), ecosystem: 'nuget' });
+                        }
+                    }
+                }
+            });
+
+        } catch (error) {
+            // Workspace detection is best-effort
+        }
+
+        return workspaces;
+    }
+
+    /**
      * Group manifests by workspace/service
      */
     groupManifestsByWorkspace(manifests) {

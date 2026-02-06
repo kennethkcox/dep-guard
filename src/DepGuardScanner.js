@@ -13,6 +13,7 @@
  */
 
 const fs = require('fs');
+const path = require('path');
 const ReachabilityAnalyzer = require('./core/ReachabilityAnalyzer');
 const GenericManifestFinder = require('./core/GenericManifestFinder');
 const GenericEntryPointDetector = require('./core/GenericEntryPointDetector');
@@ -22,6 +23,8 @@ const PythonAnalyzer = require('./analyzers/PythonAnalyzer');
 const JavaAnalyzer = require('./analyzers/JavaAnalyzer');
 const Reporter = require('./reporting/Reporter');
 const DependencyResolver = require('./utils/DependencyResolver');
+const ImportDetector = require('./utils/ImportDetector');
+const FileWalker = require('./utils/FileWalker');
 const DataFlowAnalyzer = require('./analysis/DataFlowAnalyzer');
 const MLManager = require('./ml/MLManager');
 const { getLogger } = require('./utils/logger');
@@ -143,6 +146,10 @@ class DepGuardScanner2 {
             console.log('\n[6/7] Phase 6: Performing reachability analysis...');
             await this.performReachabilityAnalysis();
 
+            // Phase 6.3: Dangerous API Pattern Detection
+            console.log('\n[6.3/7] Scanning for dangerous API patterns...');
+            await this.detectDangerousPatterns();
+
             // Phase 6.5: Data Flow Analysis (NEW)
             if (this.options.enableDataFlow) {
                 await this.performDataFlowAnalysis();
@@ -203,6 +210,16 @@ class DepGuardScanner2 {
 
         if (stats.workspaces > 1) {
             console.log(`  [i]Detected ${stats.workspaces} workspace(s) (monorepo)`);
+        }
+
+        // Detect workspace configuration
+        const workspaceConfig = this.manifestFinder.detectWorkspaces(projectPath);
+        if (workspaceConfig.length > 0) {
+            console.log(`  [i]Workspace patterns detected:`);
+            for (const ws of workspaceConfig) {
+                console.log(`    - ${ws.pattern} (${ws.source})`);
+            }
+            this.workspaceConfig = workspaceConfig;
         }
     }
 
@@ -1234,6 +1251,80 @@ class DepGuardScanner2 {
     }
 
     /**
+     * Phase 6.3: Detect dangerous API usage patterns across the codebase
+     */
+    async detectDangerousPatterns() {
+        const importDetector = new ImportDetector(this.options);
+        const fileWalker = new FileWalker({
+            maxDepth: this.options.maxDepth,
+            excludeDirs: ['node_modules', '.git', 'dist', 'build', 'target', '__pycache__', 'venv', '.venv', 'vendor']
+        });
+
+        const projectPath = this.options.projectPath;
+        const sourceFiles = fileWalker.findFiles(projectPath, [
+            '.js', '.jsx', '.ts', '.tsx', '.mjs', '.cjs',
+            '.py', '.java', '.go', '.rs', '.rb', '.php', '.cs'
+        ]);
+
+        let totalPatterns = 0;
+        this.dangerousPatterns = [];
+
+        for (const file of sourceFiles) {
+            try {
+                const content = fs.readFileSync(file, 'utf-8');
+                if (content.length > 5 * 1024 * 1024) continue; // Skip files > 5MB
+
+                const patterns = importDetector.detectDangerousPatterns(content, file);
+                if (patterns.length > 0) {
+                    this.dangerousPatterns.push(...patterns);
+                    totalPatterns += patterns.length;
+                }
+            } catch (error) {
+                // Skip unreadable files
+            }
+        }
+
+        if (totalPatterns > 0) {
+            // Group by category
+            const byCategory = {};
+            for (const p of this.dangerousPatterns) {
+                byCategory[p.category] = (byCategory[p.category] || 0) + 1;
+            }
+
+            console.log(`  [!]Found ${totalPatterns} dangerous API patterns:`);
+            for (const [category, count] of Object.entries(byCategory)) {
+                console.log(`    - ${category}: ${count}`);
+            }
+
+            // Cross-reference dangerous patterns with vulnerability results
+            // If a vulnerable package is used in a dangerous pattern, boost confidence
+            for (const result of this.results) {
+                if (!result.vulnerability) continue;
+                const vulnPkg = result.vulnerability.package || result.vulnerability.name;
+                if (!vulnPkg) continue;
+
+                for (const pattern of this.dangerousPatterns) {
+                    // Check if the dangerous pattern is in a file that imports the vulnerable package
+                    const fileImports = importDetector.detectImportsInFile(pattern.filePath, vulnPkg);
+                    if (fileImports.length > 0) {
+                        result.dangerousPatternMatch = pattern;
+                        result.confidence = Math.min(0.99, result.confidence + 0.15);
+                        if (!result.riskFactors) result.riskFactors = [];
+                        result.riskFactors.push({
+                            type: 'dangerous-api-pattern',
+                            category: pattern.category,
+                            severity: pattern.severity,
+                            description: `${pattern.description} in ${path.basename(pattern.filePath)}:${pattern.lineNumber}`
+                        });
+                    }
+                }
+            }
+        } else {
+            console.log('  [OK]No dangerous API patterns detected');
+        }
+    }
+
+    /**
      * Phase 6.5: Data Flow Analysis (NEW)
      */
     async performDataFlowAnalysis() {
@@ -1352,7 +1443,9 @@ class DepGuardScanner2 {
             reachableVulnerabilities: this.results.filter(r => r.isReachable).length,
             unreachableVulnerabilities: this.results.filter(r => !r.isReachable).length,
             callGraph: callGraphStats,
-            entryPoints: callGraphStats.entryPoints
+            entryPoints: callGraphStats.entryPoints,
+            dangerousPatterns: this.dangerousPatterns ? this.dangerousPatterns.length : 0,
+            workspaces: this.workspaceConfig ? this.workspaceConfig.length : 0
         };
     }
 
