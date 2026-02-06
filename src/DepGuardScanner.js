@@ -26,6 +26,7 @@ const DependencyResolver = require('./utils/DependencyResolver');
 const ImportDetector = require('./utils/ImportDetector');
 const FileWalker = require('./utils/FileWalker');
 const DataFlowAnalyzer = require('./analysis/DataFlowAnalyzer');
+const ShaiHuludDetector = require('./analysis/ShaiHuludDetector');
 const MLManager = require('./ml/MLManager');
 const { getLogger } = require('./utils/logger');
 const { ManifestParsingError, FileSystemError } = require('./utils/errors');
@@ -112,6 +113,9 @@ class DepGuardScanner2 {
         this.failedManifests = [];  // Track manifests that failed to parse
         this.transitiveCache = new Map();  // Cache for transitive dependency resolution
         this.dependencyResolver = new DependencyResolver(this.options);
+
+        // Shai-Hulud Detector (shadow deps, typosquatting, dependency confusion)
+        this.shaiHuludDetector = new ShaiHuludDetector(this.options);
     }
 
     /**
@@ -129,6 +133,10 @@ class DepGuardScanner2 {
             // Phase 2: Analyze Dependencies
             console.log('\n[2/7] Phase 2: Analyzing dependencies...');
             await this.analyzeDependencies();
+
+            // Phase 2.5: Shai-Hulud Detection (shadow deps, typosquatting, dependency confusion)
+            console.log('\n[2.5/7] Shai-Hulud: Hunting hidden dependency dangers...');
+            await this.performShaiHuludDetection();
 
             // Phase 3: Check Vulnerabilities
             console.log('\n[3/7] Phase 3: Checking for vulnerabilities...');
@@ -170,6 +178,7 @@ class DepGuardScanner2 {
             return {
                 success: true,
                 results: this.results,
+                shaiHuludFindings: this.shaiHuludFindings || [],
                 statistics: this.getStatistics()
             };
         } catch (error) {
@@ -288,6 +297,41 @@ class DepGuardScanner2 {
         const transitiveDeps = totalDeps - directDeps;
 
         console.log(`  [OK]Total dependencies: ${totalDeps} (${directDeps} direct, ${transitiveDeps} transitive)`);
+    }
+
+    /**
+     * Phase 2.5: Shai-Hulud Detection
+     * Hunts for shadow dependencies, typosquatting, and dependency confusion
+     */
+    async performShaiHuludDetection() {
+        const importDetector = new ImportDetector(this.options);
+        const fileWalker = new FileWalker({
+            maxDepth: this.options.maxDepth,
+            excludeDirs: ['node_modules', '.git', 'dist', 'build', 'target', '__pycache__', 'venv', '.venv', 'vendor']
+        });
+
+        const context = {
+            manifests: this.manifests,
+            allDependencies: this.allDependencies,
+            projectPath: this.options.projectPath,
+            importDetector,
+            fileWalker
+        };
+
+        this.shaiHuludFindings = await this.shaiHuludDetector.detect(context);
+
+        if (this.shaiHuludFindings.length > 0) {
+            const summary = this.shaiHuludDetector.getSummary();
+            console.log(`  [!]Found ${summary.total} hidden dependency issue(s):`);
+            for (const [type, count] of Object.entries(summary.byType)) {
+                console.log(`    - ${type}: ${count}`);
+            }
+            if (summary.highSeverity > 0) {
+                console.log(`  [!!]${summary.highSeverity} HIGH severity finding(s) require attention`);
+            }
+        } else {
+            console.log('  [OK]No hidden dependency dangers detected');
+        }
     }
 
     /**
@@ -1445,7 +1489,8 @@ class DepGuardScanner2 {
             callGraph: callGraphStats,
             entryPoints: callGraphStats.entryPoints,
             dangerousPatterns: this.dangerousPatterns ? this.dangerousPatterns.length : 0,
-            workspaces: this.workspaceConfig ? this.workspaceConfig.length : 0
+            workspaces: this.workspaceConfig ? this.workspaceConfig.length : 0,
+            shaiHulud: this.shaiHuludFindings ? this.shaiHuludDetector.getSummary() : { total: 0, byType: {}, highSeverity: 0 }
         };
     }
 
@@ -1485,6 +1530,7 @@ class DepGuardScanner2 {
         this.manifests = [];
         this.allDependencies = [];
         this.failedManifests = [];
+        this.shaiHuludFindings = [];
 
         this.logger.debug('Scanner cleanup completed');
     }
