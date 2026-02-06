@@ -50,7 +50,13 @@ class DepGuardScanner2 {
             verbose: { type: 'boolean' },
             enableDataFlow: { type: 'boolean' },
             enableML: { type: 'boolean' },
-            resolveTransitive: { type: 'boolean' }
+            resolveTransitive: { type: 'boolean' },
+            enableNVD: { type: 'boolean' },
+            enableGitHub: { type: 'boolean' },
+            disableEPSS: { type: 'boolean' },
+            disableKEV: { type: 'boolean' },
+            nvdApiKey: { type: 'string', mustExist: false },
+            githubToken: { type: 'string', mustExist: false }
         });
 
         this.options = {
@@ -1007,7 +1013,13 @@ class DepGuardScanner2 {
             if (!this.vulnDatabases.has(ecosystem)) {
                 this.vulnDatabases.set(ecosystem, new VulnerabilityDatabase({
                     ecosystem,
-                    verbose: this.options.verbose
+                    verbose: this.options.verbose,
+                    enableNVD: this.options.enableNVD,
+                    enableGitHub: this.options.enableGitHub,
+                    disableEPSS: this.options.disableEPSS,
+                    disableKEV: this.options.disableKEV,
+                    nvdApiKey: this.options.nvdApiKey,
+                    githubToken: this.options.githubToken
                 }));
             }
 
@@ -1021,6 +1033,15 @@ class DepGuardScanner2 {
                 const vulns = vulnDb.getVulnerabilities(dep.name, dep.version);
                 totalVulns += vulns.length;
             }
+        }
+
+        // Report which sources are active
+        const firstDb = this.vulnDatabases.values().next().value;
+        if (firstDb && firstDb.enabledSources) {
+            const activeSources = Object.entries(firstDb.enabledSources)
+                .filter(([, enabled]) => enabled)
+                .map(([name]) => name.toUpperCase());
+            console.log(`  [i]Active vulnerability sources: ${activeSources.join(', ')}`);
         }
 
         console.log(`  [OK]Found ${totalVulns} known vulnerabilities`);

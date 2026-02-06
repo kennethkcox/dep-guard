@@ -35,6 +35,12 @@ program
   .option('--severity <level>', 'Filter by severity (critical, high, medium, low)')
   .option('--disable-data-flow', 'Disable data flow analysis', false)
   .option('--disable-ml', 'Disable ML risk prediction', false)
+  .option('--enable-nvd', 'Enable NVD (National Vulnerability Database) queries')
+  .option('--nvd-api-key <key>', 'NVD API key (or set NVD_API_KEY env var)')
+  .option('--enable-github', 'Enable GitHub Security Advisory queries')
+  .option('--github-token <token>', 'GitHub token (or set GITHUB_TOKEN env var)')
+  .option('--disable-epss', 'Disable EPSS exploit probability scoring')
+  .option('--disable-kev', 'Disable CISA Known Exploited Vulnerabilities checking')
   .option('-v, --verbose', 'Verbose output', false)
   .action(async (options) => {
     try {
@@ -71,7 +77,13 @@ program
         entryPointConfidence: 0.6, // Default
         verbose: options.verbose,
         enableDataFlow: !options.disableDataFlow,
-        enableML: !options.disableMl
+        enableML: !options.disableMl,
+        enableNVD: options.enableNvd || !!process.env.NVD_API_KEY,
+        nvdApiKey: options.nvdApiKey || process.env.NVD_API_KEY,
+        enableGitHub: options.enableGithub || !!process.env.GITHUB_TOKEN,
+        githubToken: options.githubToken || process.env.GITHUB_TOKEN,
+        disableEPSS: options.disableEpss,
+        disableKEV: options.disableKev
       });
 
       // Run scan
