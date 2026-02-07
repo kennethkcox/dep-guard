@@ -785,95 +785,100 @@ class DepGuardScanner2 {
      */
     extractNuGetDependencies(content, manifest) {
         const deps = [];
+        const seen = new Set();
 
-        try {
-            let match;
-
-            // Parse PackageReference elements (modern .NET Core/5+/6+ format)
-            // <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
-            const packageRefRegex = /<PackageReference\s+Include=["']([^"']+)["']\s+Version=["']([^"']+)["']\s*\/>/gi;
-            while ((match = packageRefRegex.exec(content)) !== null) {
+        const addDep = (name, version) => {
+            if (name && !seen.has(name)) {
+                seen.add(name);
                 deps.push({
-                    name: match[1],
-                    version: match[2].replace(/[\[\]\(\)]/g, '').split(',')[0].trim(),
+                    name,
+                    version: version ? version.replace(/[\[\]\(\)]/g, '').split(',')[0].trim() : 'centrally-managed',
                     ecosystem: 'nuget',
                     manifest: manifest.path
                 });
             }
+        };
 
-            // Also handle PackageReference with Version as child element
-            const packageRefBlockRegex = /<PackageReference\s+Include=["']([^"']+)["'][^>]*>[\s\S]*?<Version>([^<]+)<\/Version>[\s\S]*?<\/PackageReference>/gi;
-            while ((match = packageRefBlockRegex.exec(content)) !== null) {
-                if (!deps.find(d => d.name === match[1])) {
-                    deps.push({
-                        name: match[1],
-                        version: match[2].trim(),
-                        ecosystem: 'nuget',
-                        manifest: manifest.path
-                    });
+        try {
+            // ── PackageReference: universal regex that handles all attribute orders,
+            // multi-line, extra attributes, self-closing and non-self-closing tags ──
+
+            // Strategy: find ALL PackageReference elements, then extract Include/Version from attributes
+            const allPackageRefs = content.matchAll(/<PackageReference\b([^>]*?)(?:\/>|>([\s\S]*?)<\/PackageReference>)/gi);
+            for (const m of allPackageRefs) {
+                const attrs = m[1];
+                const innerContent = m[2] || '';
+
+                const includeMatch = attrs.match(/Include\s*=\s*["']([^"']+)["']/i);
+                if (!includeMatch) continue;
+                const name = includeMatch[1];
+
+                // Version from attribute
+                const versionAttrMatch = attrs.match(/Version\s*=\s*["']([^"']+)["']/i);
+                if (versionAttrMatch) {
+                    addDep(name, versionAttrMatch[1]);
+                    continue;
                 }
+
+                // Version from child element
+                const versionElemMatch = innerContent.match(/<Version>([^<]+)<\/Version>/i);
+                if (versionElemMatch) {
+                    addDep(name, versionElemMatch[1].trim());
+                    continue;
+                }
+
+                // No version found (centrally managed)
+                addDep(name, null);
             }
 
-            // Handle PackageReference without Version (version may come from Directory.Packages.props)
-            const packageRefNoVersionRegex = /<PackageReference\s+Include=["']([^"']+)["']\s*\/>/gi;
-            while ((match = packageRefNoVersionRegex.exec(content)) !== null) {
-                if (!deps.find(d => d.name === match[1])) {
-                    deps.push({
-                        name: match[1],
-                        version: 'centrally-managed',
-                        ecosystem: 'nuget',
-                        manifest: manifest.path
-                    });
-                }
-            }
-
-            // Parse legacy packages.config format
-            if (manifest.filename === 'packages.config') {
-                const packageRegex = /<package\s+id=["']([^"']+)["']\s+version=["']([^"']+)["'][^>]*\/>/gi;
-                while ((match = packageRegex.exec(content)) !== null) {
-                    deps.push({
-                        name: match[1],
-                        version: match[2],
-                        ecosystem: 'nuget',
-                        manifest: manifest.path
-                    });
-                }
-            }
-
-            // Parse .nuspec format
-            if (manifest.filename.endsWith('.nuspec')) {
-                const nuspecDepRegex = /<dependency\s+id=["']([^"']+)["']\s+version=["']([^"']+)["'][^>]*\/?>/gi;
-                while ((match = nuspecDepRegex.exec(content)) !== null) {
-                    deps.push({
-                        name: match[1],
-                        version: match[2].replace(/[\[\]\(\)]/g, '').split(',')[0].trim(),
-                        ecosystem: 'nuget',
-                        manifest: manifest.path
-                    });
-                }
-            }
-
-            // Parse Directory.Packages.props (central package version management)
+            // ── PackageVersion (Directory.Packages.props central management) ──
             if (manifest.filename === 'Directory.Packages.props') {
-                const pkgVersionRegex = /<PackageVersion\s+Include=["']([^"']+)["']\s+Version=["']([^"']+)["']\s*\/>/gi;
-                while ((match = pkgVersionRegex.exec(content)) !== null) {
-                    deps.push({
-                        name: match[1],
-                        version: match[2].replace(/[\[\]\(\)]/g, '').split(',')[0].trim(),
-                        ecosystem: 'nuget',
-                        manifest: manifest.path
-                    });
+                const allPkgVersions = content.matchAll(/<PackageVersion\b([^>]*?)(?:\/>|>([\s\S]*?)<\/PackageVersion>)/gi);
+                for (const m of allPkgVersions) {
+                    const attrs = m[1];
+                    const includeMatch = attrs.match(/Include\s*=\s*["']([^"']+)["']/i);
+                    const versionMatch = attrs.match(/Version\s*=\s*["']([^"']+)["']/i);
+                    if (includeMatch) {
+                        addDep(includeMatch[1], versionMatch ? versionMatch[1] : null);
+                    }
                 }
             }
 
-            // Parse packages.lock.json
+            // ── Legacy packages.config format ──
+            if (manifest.filename === 'packages.config') {
+                const allPackages = content.matchAll(/<package\b([^>]*?)\/?>/gi);
+                for (const m of allPackages) {
+                    const attrs = m[1];
+                    const idMatch = attrs.match(/id\s*=\s*["']([^"']+)["']/i);
+                    const versionMatch = attrs.match(/version\s*=\s*["']([^"']+)["']/i);
+                    if (idMatch) {
+                        addDep(idMatch[1], versionMatch ? versionMatch[1] : null);
+                    }
+                }
+            }
+
+            // ── .nuspec format ──
+            if (manifest.filename.endsWith('.nuspec')) {
+                const allNuspecDeps = content.matchAll(/<dependency\b([^>]*?)\/?>/gi);
+                for (const m of allNuspecDeps) {
+                    const attrs = m[1];
+                    const idMatch = attrs.match(/id\s*=\s*["']([^"']+)["']/i);
+                    const versionMatch = attrs.match(/version\s*=\s*["']([^"']+)["']/i);
+                    if (idMatch) {
+                        addDep(idMatch[1], versionMatch ? versionMatch[1] : null);
+                    }
+                }
+            }
+
+            // ── packages.lock.json ──
             if (manifest.filename === 'packages.lock.json') {
                 try {
                     const lockData = JSON.parse(content);
                     if (lockData.dependencies) {
                         for (const [framework, packages] of Object.entries(lockData.dependencies)) {
                             for (const [name, info] of Object.entries(packages)) {
-                                if (!deps.find(d => d.name === name)) {
+                                if (!seen.has(name)) {
+                                    seen.add(name);
                                     deps.push({
                                         name,
                                         version: info.resolved || 'unknown',
@@ -886,7 +891,7 @@ class DepGuardScanner2 {
                         }
                     }
                 } catch (e) {
-                    // Fall through to error handler
+                    // Fall through
                 }
             }
 

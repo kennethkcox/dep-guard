@@ -955,7 +955,9 @@ class GenericManifestFinder {
                     const content = fs.readFileSync(filePath, 'utf8');
                     const projMatches = content.matchAll(/Project\("[^"]*"\)\s*=\s*"[^"]*"\s*,\s*"([^"]+\.(csproj|fsproj|vbproj))"/gi);
                     for (const match of projMatches) {
-                        const projDir = path.dirname(match[1]).replace(/\\/g, '/');
+                        // Normalize Windows backslashes before dirname (path.dirname on Linux treats \ as part of filename)
+                        const normalizedPath = match[1].replace(/\\/g, '/');
+                        const projDir = path.dirname(normalizedPath);
                         if (projDir && projDir !== '.') {
                             workspaces.push({ pattern: projDir, source: path.basename(filePath), ecosystem: 'nuget' });
                         }

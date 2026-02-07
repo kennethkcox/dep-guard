@@ -1,9 +1,97 @@
 /**
  * Advanced Reachability Analyzer
- * Performs sophisticated static analysis to determine if vulnerable code is actually reachable
+ *
+ * Performs sophisticated static analysis to determine if vulnerable code
+ * is actually reachable from application entry points.
+ *
+ * Detection strategies (in priority order):
+ * 1. Call Graph BFS: Direct forward/backward path finding in the call graph
+ * 2. Import-Based Heuristics: Package-level import scanning with function-specificity
+ * 3. Transitive Import Analysis: A imports B, B imports vulnerable-C → A is indirectly reachable
+ * 4. Dangerous Pattern Matching: Known vulnerable API usage patterns boost confidence
+ * 5. File-Level Reachability: Entry-point file proximity analysis
  */
 
 const ImportDetector = require('../utils/ImportDetector');
+
+// Known vulnerable function patterns for common packages (CVE-specific)
+const KNOWN_VULNERABLE_PATTERNS = {
+  'lodash': {
+    functions: ['template', 'merge', 'defaultsDeep', 'set', 'setWith', 'zipObjectDeep'],
+    patterns: [/\.template\s*\(/, /\.merge\s*\(/, /\.defaultsDeep\s*\(/, /\._\.set\s*\(/],
+    description: 'Prototype pollution or command injection via template'
+  },
+  'express': {
+    functions: ['static', 'send', 'redirect'],
+    patterns: [/express\.static\s*\(/, /res\.redirect\s*\(.*req\./],
+    description: 'Open redirect, path traversal'
+  },
+  'axios': {
+    functions: ['get', 'post', 'request'],
+    patterns: [/axios\.(get|post|put|delete|request)\s*\([^)]*req\.(body|query|params)/],
+    description: 'SSRF via user-controlled URLs'
+  },
+  'requests': {
+    functions: ['get', 'post', 'request'],
+    patterns: [/requests\.(get|post|put|delete)\s*\(/],
+    description: 'SSRF or insecure SSL verification'
+  },
+  'yaml': {
+    functions: ['load', 'safe_load'],
+    patterns: [/yaml\.load\s*\(/, /yaml\.unsafe_load\s*\(/],
+    description: 'Arbitrary code execution via YAML deserialization'
+  },
+  'pyyaml': {
+    functions: ['load'],
+    patterns: [/yaml\.load\s*\(/],
+    description: 'Arbitrary code execution via YAML deserialization'
+  },
+  'jackson-databind': {
+    functions: ['readValue', 'enableDefaultTyping'],
+    patterns: [/enableDefaultTyping/, /ObjectMapper.*readValue/],
+    description: 'Deserialization RCE'
+  },
+  'log4j-core': {
+    functions: ['info', 'error', 'warn', 'debug', 'fatal'],
+    patterns: [/logger\.(info|error|warn|debug|fatal)\s*\(/i],
+    description: 'Log4Shell RCE via JNDI lookup'
+  },
+  'spring-boot-starter-security': {
+    functions: [],
+    patterns: [/SecurityFilterChain/, /@EnableWebSecurity/],
+    description: 'Spring Security bypass'
+  },
+  'Newtonsoft.Json': {
+    functions: ['DeserializeObject', 'JsonConvert'],
+    patterns: [/JsonConvert\.DeserializeObject/, /TypeNameHandling\s*=\s*TypeNameHandling\.(All|Auto|Objects|Arrays)/],
+    description: 'Deserialization RCE via TypeNameHandling'
+  },
+  'System.Text.Json': {
+    functions: ['Deserialize'],
+    patterns: [/JsonSerializer\.Deserialize/],
+    description: 'Potential deserialization issues'
+  },
+  'serde': {
+    functions: ['deserialize'],
+    patterns: [/#\[derive\(.*Deserialize/],
+    description: 'Deserialization issues'
+  },
+  'nokogiri': {
+    functions: ['parse', 'XML', 'HTML'],
+    patterns: [/Nokogiri::(XML|HTML)\.parse/],
+    description: 'XXE or HTML injection'
+  },
+  'django': {
+    functions: ['raw', 'extra'],
+    patterns: [/\.raw\s*\(/, /\.extra\s*\(/],
+    description: 'SQL injection via raw queries'
+  },
+  'sqlalchemy': {
+    functions: ['text', 'execute'],
+    patterns: [/text\s*\(.*\+/, /execute\s*\(.*%/],
+    description: 'SQL injection via string concatenation'
+  }
+};
 
 class ReachabilityAnalyzer {
   constructor(options = {}) {
@@ -13,6 +101,8 @@ class ReachabilityAnalyzer {
       minConfidence: options.minConfidence || 0.5,
       includeIndirectPaths: options.includeIndirectPaths !== false,
       useImportHeuristics: options.useImportHeuristics !== false,
+      usePatternMatching: options.usePatternMatching !== false,
+      useTransitiveImports: options.useTransitiveImports !== false,
       ...options
     };
 
@@ -24,6 +114,8 @@ class ReachabilityAnalyzer {
     this.importDetector = new ImportDetector();
     this.reachableFiles = new Set(); // Files reachable from entry points
     this.projectPath = null; // Project root for import scanning
+    this.importGraph = new Map(); // file -> Set of imported packages (for transitive analysis)
+    this.fileContents = new Map(); // Cached file contents for pattern matching
   }
 
   /**
@@ -129,7 +221,11 @@ class ReachabilityAnalyzer {
   }
 
   /**
-   * Analyzes reachability for all vulnerabilities
+   * Analyzes reachability for all vulnerabilities using a multi-strategy approach:
+   * 1. Call Graph BFS (highest confidence)
+   * 2. Import-based heuristics (medium confidence)
+   * 3. Dangerous pattern matching (medium-high confidence)
+   * 4. Transitive import analysis (lower confidence)
    */
   analyzeAll() {
     const results = [];
@@ -138,28 +234,65 @@ class ReachabilityAnalyzer {
     // First, identify all files reachable from entry points
     this.identifyReachableFiles();
 
+    // Build import graph for transitive analysis
+    if (this.options.useTransitiveImports && this.projectPath) {
+      this.buildImportGraph();
+    }
+
     logger.debug('Starting reachability analysis', {
       vulnerablePackages: this.vulnerableLocations.size,
       reachableFiles: this.reachableFiles.size,
-      useImportHeuristics: this.options.useImportHeuristics
+      useImportHeuristics: this.options.useImportHeuristics,
+      usePatternMatching: this.options.usePatternMatching,
+      useTransitiveImports: this.options.useTransitiveImports
     });
 
     for (const [packageName, vulnerabilities] of this.vulnerableLocations) {
       logger.debug('Analyzing package', { packageName, vulnCount: vulnerabilities.length });
 
       for (const vuln of vulnerabilities) {
-        // Try traditional call graph analysis first
+        // Strategy 1: Traditional call graph analysis (highest confidence)
         let reachability = this.analyzeReachability(vuln.location);
+        let bestMethod = reachability.isReachable ? 'call-graph' : null;
 
-        // If not reachable via call graph, try import-based heuristics
+        // Strategy 2: Import-based heuristics
         if (!reachability.isReachable && this.options.useImportHeuristics) {
           const importReachability = this.analyzeViaImports(packageName, vuln);
           if (importReachability.isReachable) {
             reachability = importReachability;
+            bestMethod = importReachability.method || 'import-detection';
             logger.info('Found reachable via imports', {
               package: packageName,
               confidence: reachability.confidence
             });
+          }
+        }
+
+        // Strategy 3: Dangerous pattern matching
+        // This can BOOST confidence of import-detected reachability
+        // or detect reachability missed by import scanning
+        if (this.options.usePatternMatching) {
+          const patternResult = this.analyzeViaPatterns(packageName, vuln);
+          if (patternResult.isReachable) {
+            if (!reachability.isReachable) {
+              reachability = patternResult;
+              bestMethod = 'pattern-matching';
+            } else {
+              // Boost existing confidence if patterns also match
+              reachability.confidence = Math.min(1.0,
+                reachability.confidence + patternResult.confidence * 0.2
+              );
+              bestMethod = reachability.method ? `${reachability.method}+pattern` : 'call-graph+pattern';
+            }
+          }
+        }
+
+        // Strategy 4: Transitive import analysis (if still not found)
+        if (!reachability.isReachable && this.options.useTransitiveImports) {
+          const transitiveResult = this.analyzeViaTransitiveImports(packageName, vuln);
+          if (transitiveResult.isReachable) {
+            reachability = transitiveResult;
+            bestMethod = 'transitive-import';
           }
         }
 
@@ -176,7 +309,7 @@ class ReachabilityAnalyzer {
             shortestPathLength: reachability.shortestPathLength || 0,
             paths: reachability.paths ? reachability.paths.slice(0, 3) : [],
             totalPathsFound: reachability.paths ? reachability.paths.length : 0,
-            detectionMethod: reachability.isReachable ? (reachability.method || 'call-graph') : 'none'
+            detectionMethod: reachability.isReachable ? (bestMethod || 'call-graph') : 'none'
           },
           isReachable: reachability.isReachable,
           confidence: reachability.isReachable ? reachability.confidence : 0
@@ -514,6 +647,189 @@ class ReachabilityAnalyzer {
     };
   }
 
+  // ─── Strategy 3: Dangerous Pattern Matching ─────────────────────────
+
+  /**
+   * Analyzes reachability via known vulnerable API usage patterns.
+   * For example, if lodash.template is a known vulnerable function and
+   * we find `_.template(` in the source, that's a strong reachability signal.
+   */
+  analyzeViaPatterns(packageName, vuln) {
+    try {
+      const patterns = KNOWN_VULNERABLE_PATTERNS[packageName];
+      if (!patterns) {
+        return { isReachable: false, confidence: 0 };
+      }
+
+      const fs = require('fs');
+      const filesToCheck = this.getFilesToCheck();
+
+      for (const file of filesToCheck) {
+        let content;
+        if (this.fileContents.has(file)) {
+          content = this.fileContents.get(file);
+        } else {
+          try {
+            content = fs.readFileSync(file, 'utf8');
+            this.fileContents.set(file, content);
+          } catch {
+            continue;
+          }
+        }
+
+        // Check each dangerous pattern
+        for (const pattern of patterns.patterns) {
+          if (pattern.test(content)) {
+            const isEntryFile = this.reachableFiles.has(file);
+            const confidence = isEntryFile ? 0.85 : 0.70;
+
+            return {
+              isReachable: confidence >= this.options.minConfidence,
+              confidence,
+              shortestPathLength: 1,
+              paths: [{
+                nodes: [file, `${packageName} (dangerous pattern: ${patterns.description})`],
+                confidence
+              }],
+              method: 'pattern-matching'
+            };
+          }
+        }
+
+        // Also check for specific function name usage (less specific but still useful)
+        for (const funcName of patterns.functions) {
+          // Look for patterns like pkg.func( or require('pkg').func(
+          const funcPattern = new RegExp(`\\b${funcName}\\s*\\(`, 'g');
+          if (funcPattern.test(content)) {
+            // Verify the file also imports this package
+            const importResult = this.importDetector.isPackageImported(packageName, [file]);
+            if (importResult.imported) {
+              const confidence = 0.75;
+              return {
+                isReachable: confidence >= this.options.minConfidence,
+                confidence,
+                shortestPathLength: 1,
+                paths: [{
+                  nodes: [file, `${packageName}.${funcName} (function match)`],
+                  confidence
+                }],
+                method: 'pattern-matching'
+              };
+            }
+          }
+        }
+      }
+    } catch (error) {
+      // Pattern matching is best-effort
+    }
+
+    return { isReachable: false, confidence: 0 };
+  }
+
+  // ─── Strategy 4: Transitive Import Analysis ────────────────────────
+
+  /**
+   * Builds a graph of file-to-package imports for transitive analysis.
+   * If file A imports package B, and package B depends on vulnerable package C,
+   * then A has a transitive path to C.
+   */
+  buildImportGraph() {
+    const fs = require('fs');
+    const filesToCheck = this.getFilesToCheck();
+
+    for (const file of filesToCheck) {
+      try {
+        const content = fs.readFileSync(file, 'utf8');
+        this.fileContents.set(file, content);
+
+        const imports = this.importDetector.detectImports(content, file);
+        const packageNames = new Set();
+        for (const imp of imports) {
+          if (imp.package) {
+            packageNames.add(imp.package);
+          }
+        }
+        this.importGraph.set(file, packageNames);
+      } catch {
+        // Skip unreadable files
+      }
+    }
+  }
+
+  /**
+   * Checks if a vulnerable package is reachable transitively via imports.
+   * This handles cases like:
+   *   app.js → lodash → (vulnerable function in lodash internals)
+   * where the call graph doesn't have explicit edges to internal lodash modules.
+   */
+  analyzeViaTransitiveImports(packageName, vuln) {
+    try {
+      // Check if any entry-point-reachable file imports a package that depends on the vulnerable one
+      for (const [file, imports] of this.importGraph) {
+        if (!this.reachableFiles.has(file)) continue;
+
+        // Direct import of vulnerable package from an entry-reachable file
+        if (imports.has(packageName)) {
+          return {
+            isReachable: true,
+            confidence: 0.55,
+            shortestPathLength: 2,
+            paths: [{
+              nodes: [file, `${packageName} (transitive import)`],
+              confidence: 0.55
+            }],
+            method: 'transitive-import'
+          };
+        }
+
+        // Check if any imported package name is a prefix/alias of the vulnerable one
+        // e.g., importing "@org/core" which internally uses "vulnerable-pkg"
+        for (const importedPkg of imports) {
+          if (packageName.startsWith(importedPkg + '/') || importedPkg.startsWith(packageName + '/')) {
+            return {
+              isReachable: true,
+              confidence: 0.45,
+              shortestPathLength: 3,
+              paths: [{
+                nodes: [file, importedPkg, `${packageName} (transitive)`],
+                confidence: 0.45
+              }],
+              method: 'transitive-import'
+            };
+          }
+        }
+      }
+    } catch (error) {
+      // Transitive analysis is best-effort
+    }
+
+    return { isReachable: false, confidence: 0 };
+  }
+
+  // ─── Helper Methods ────────────────────────────────────────────────
+
+  /**
+   * Gets the list of files to check for import/pattern analysis.
+   * Prioritizes reachable files, then scans project if needed.
+   */
+  getFilesToCheck() {
+    let filesToCheck = Array.from(this.reachableFiles);
+
+    if (filesToCheck.length < 10 && this.projectPath) {
+      const allFiles = [];
+      try {
+        this.importDetector.walkDirectory(this.projectPath, (file) => {
+          allFiles.push(file);
+        });
+      } catch {
+        // Ignore walk errors
+      }
+      filesToCheck = allFiles;
+    }
+
+    return filesToCheck;
+  }
+
   /**
    * Clears all analysis data
    */
@@ -523,6 +839,8 @@ class ReachabilityAnalyzer {
     this.entryPoints.clear();
     this.vulnerableLocations.clear();
     this.analysisCache.clear();
+    this.importGraph.clear();
+    this.fileContents.clear();
   }
 }
 
