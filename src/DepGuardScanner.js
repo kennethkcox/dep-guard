@@ -172,8 +172,10 @@ class DepGuardScanner2 {
             console.log('\n[7/7] Phase 7: Generating results...');
             this.generateResults();
 
+            const reachableCount = this.results.filter(r => r.isReachable).length;
+            const totalCount = this.results.length;
             console.log('\n' + '='.repeat(60));
-            console.log(`[OK] Scan complete: Found ${this.results.length} reachable vulnerabilities\n`);
+            console.log(`[OK] Scan complete: Found ${totalCount} vulnerabilities (${reachableCount} reachable, ${totalCount - reachableCount} unreachable)\n`);
 
             return {
                 success: true,

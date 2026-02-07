@@ -144,6 +144,39 @@ describe('ReachabilityAnalyzer', () => {
       expect(results.every(r => r.reachability.isReachable)).toBe(true);
     });
 
+    test('should include unreachable vulnerabilities in results', () => {
+      analyzer.addEntryPoint('app.js', 'main');
+      analyzer.addCall('app.js', 'main', 'vuln1.js', 'vulnerable1', 'direct');
+
+      // vuln1 is reachable, vuln2 is not (no call path)
+      analyzer.addVulnerability('pkg1', 'vuln1.js', 'vulnerable1', { id: 'CVE-1' });
+      analyzer.addVulnerability('pkg2', 'isolated.js', 'notCalled', { id: 'CVE-2' });
+
+      const results = analyzer.analyzeAll();
+
+      expect(results.length).toBe(2);
+
+      const reachable = results.filter(r => r.isReachable);
+      const unreachable = results.filter(r => !r.isReachable);
+      expect(reachable.length).toBe(1);
+      expect(unreachable.length).toBe(1);
+      expect(unreachable[0].reachability.confidence).toBe(0);
+      expect(unreachable[0].reachability.detectionMethod).toBe('none');
+    });
+
+    test('should sort reachable before unreachable', () => {
+      analyzer.addEntryPoint('app.js', 'main');
+      analyzer.addCall('app.js', 'main', 'vuln1.js', 'vulnerable1', 'direct');
+
+      analyzer.addVulnerability('pkg1', 'vuln1.js', 'vulnerable1', { id: 'CVE-1' });
+      analyzer.addVulnerability('pkg2', 'isolated.js', 'notCalled', { id: 'CVE-2' });
+
+      const results = analyzer.analyzeAll();
+
+      expect(results[0].isReachable).toBe(true);
+      expect(results[1].isReachable).toBe(false);
+    });
+
     test('should sort by confidence', () => {
       analyzer.addEntryPoint('app.js', 'main');
 

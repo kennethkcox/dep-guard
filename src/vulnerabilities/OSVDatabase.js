@@ -246,17 +246,13 @@ class OSVDatabase {
    * Extract severity from vulnerability data
    */
   extractSeverity(vuln) {
-    // Try CVSS score first
-    if (vuln.severity) {
-      for (const sev of vuln.severity) {
-        if (sev.type === 'CVSS_V3') {
-          const score = parseFloat(sev.score);
-          if (score >= 9.0) return 'CRITICAL';
-          if (score >= 7.0) return 'HIGH';
-          if (score >= 4.0) return 'MEDIUM';
-          return 'LOW';
-        }
-      }
+    // Try to get a numeric CVSS score
+    const cvss = this.extractCVSS(vuln);
+    if (cvss !== null && !isNaN(cvss)) {
+      if (cvss >= 9.0) return 'CRITICAL';
+      if (cvss >= 7.0) return 'HIGH';
+      if (cvss >= 4.0) return 'MEDIUM';
+      if (cvss > 0) return 'LOW';
     }
 
     // Fallback to database-specific severity
@@ -264,21 +260,95 @@ class OSVDatabase {
       return vuln.database_specific.severity.toUpperCase();
     }
 
-    return 'MEDIUM'; // Default
+    return 'UNKNOWN';
   }
 
   /**
-   * Extract CVSS score
+   * Extract CVSS score from vulnerability data
+   * OSV returns CVSS as vector strings (e.g., "CVSS:3.1/AV:N/AC:L/...")
+   * or occasionally as numeric scores
    */
   extractCVSS(vuln) {
     if (vuln.severity) {
       for (const sev of vuln.severity) {
         if (sev.type === 'CVSS_V3' || sev.type === 'CVSS_V2') {
-          return parseFloat(sev.score) || 5.0;
+          // Try parsing as numeric score first
+          const numeric = parseFloat(sev.score);
+          if (!isNaN(numeric) && numeric >= 0 && numeric <= 10) {
+            return numeric;
+          }
+
+          // Parse CVSS vector string to derive base score
+          if (typeof sev.score === 'string' && sev.score.startsWith('CVSS:')) {
+            return this.parseCVSSVector(sev.score);
+          }
         }
       }
     }
-    return 5.0; // Default medium
+
+    // Try database_specific CVSS
+    if (vuln.database_specific?.cvss_score) {
+      return parseFloat(vuln.database_specific.cvss_score) || null;
+    }
+
+    return null; // Unknown - don't guess
+  }
+
+  /**
+   * Parse a CVSS v3 vector string into an approximate base score
+   * Vector format: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H
+   */
+  parseCVSSVector(vector) {
+    const metrics = {};
+    const parts = vector.split('/');
+    for (const part of parts) {
+      const [key, value] = part.split(':');
+      if (key && value) metrics[key] = value;
+    }
+
+    // CVSS v3 base metric weights (simplified but accurate approximation)
+    const avWeights = { N: 0.85, A: 0.62, L: 0.55, P: 0.20 };  // Attack Vector
+    const acWeights = { L: 0.77, H: 0.44 };                      // Attack Complexity
+    const prWeightsU = { N: 0.85, L: 0.62, H: 0.27 };           // Privileges Required (Scope Unchanged)
+    const prWeightsC = { N: 0.85, L: 0.68, H: 0.50 };           // Privileges Required (Scope Changed)
+    const uiWeights = { N: 0.85, R: 0.62 };                      // User Interaction
+    const impactWeights = { H: 0.56, L: 0.22, N: 0 };           // Impact (C/I/A)
+
+    const scopeChanged = metrics['S'] === 'C';
+    const prWeights = scopeChanged ? prWeightsC : prWeightsU;
+
+    const av = avWeights[metrics['AV']] || 0.55;
+    const ac = acWeights[metrics['AC']] || 0.44;
+    const pr = prWeights[metrics['PR']] || 0.62;
+    const ui = uiWeights[metrics['UI']] || 0.62;
+    const cImpact = impactWeights[metrics['C']] || 0;
+    const iImpact = impactWeights[metrics['I']] || 0;
+    const aImpact = impactWeights[metrics['A']] || 0;
+
+    // Calculate exploitability sub-score
+    const exploitability = 8.22 * av * ac * pr * ui;
+
+    // Calculate impact sub-score (ISS then Impact)
+    const iss = 1 - ((1 - cImpact) * (1 - iImpact) * (1 - aImpact));
+    let impact;
+    if (scopeChanged) {
+      impact = 7.52 * (iss - 0.029) - 3.25 * Math.pow(iss - 0.02, 15);
+    } else {
+      impact = 6.42 * iss;
+    }
+
+    if (impact <= 0) return 0.0;
+
+    // Calculate base score
+    let baseScore;
+    if (scopeChanged) {
+      baseScore = Math.min(1.08 * (impact + exploitability), 10);
+    } else {
+      baseScore = Math.min(impact + exploitability, 10);
+    }
+
+    // Round up to nearest 0.1
+    return Math.ceil(baseScore * 10) / 10;
   }
 
   /**

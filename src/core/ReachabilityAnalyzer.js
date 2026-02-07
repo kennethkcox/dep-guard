@@ -163,31 +163,32 @@ class ReachabilityAnalyzer {
           }
         }
 
-        if (reachability.isReachable) {
-          results.push({
-            package: packageName,
-            vulnerability: vuln.vulnerability,
-            location: vuln.location,
-            functionName: vuln.functionName,
-            modulePath: vuln.modulePath,
-            reachability: {
-              isReachable: true,
-              confidence: reachability.confidence,
-              shortestPathLength: reachability.shortestPathLength || 0,
-              paths: reachability.paths ? reachability.paths.slice(0, 3) : [],
-              totalPathsFound: reachability.paths ? reachability.paths.length : 0,
-              detectionMethod: reachability.method || 'call-graph'
-            },
-            isReachable: true,
-            confidence: reachability.confidence
-          });
-        }
+        // Always include the vulnerability in results, regardless of reachability
+        results.push({
+          package: packageName,
+          vulnerability: vuln.vulnerability,
+          location: vuln.location,
+          functionName: vuln.functionName,
+          modulePath: vuln.modulePath,
+          reachability: {
+            isReachable: reachability.isReachable,
+            confidence: reachability.isReachable ? reachability.confidence : 0,
+            shortestPathLength: reachability.shortestPathLength || 0,
+            paths: reachability.paths ? reachability.paths.slice(0, 3) : [],
+            totalPathsFound: reachability.paths ? reachability.paths.length : 0,
+            detectionMethod: reachability.isReachable ? (reachability.method || 'call-graph') : 'none'
+          },
+          isReachable: reachability.isReachable,
+          confidence: reachability.isReachable ? reachability.confidence : 0
+        });
       }
     }
 
-    return results.sort((a, b) =>
-      b.reachability.confidence - a.reachability.confidence
-    );
+    // Sort: reachable first, then by confidence descending
+    return results.sort((a, b) => {
+      if (a.isReachable !== b.isReachable) return b.isReachable ? 1 : -1;
+      return b.reachability.confidence - a.reachability.confidence;
+    });
   }
 
   /**
